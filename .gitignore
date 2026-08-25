@@ -1,0 +1,16 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Environment varijable (TAJNI PODACI - NIKAD ne commitati)
+.env
+.env.local
+
+# Quasar build
+choretogether-client/dist/
+choretogether-client/.quasar/
+
+# Editor / OS
+.vscode/
+.DS_Store
+Thumbs.db
