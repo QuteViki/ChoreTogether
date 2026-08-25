@@ -1,83 +1,132 @@
 <template>
-  <q-page class="q-pa-md">
-    <div class="row items-center justify-between q-mb-md">
-      <div class="text-h6">{{ t('statistika.naslov') }}</div>
-      <q-btn-toggle
-        v-model="razdoblje"
-        no-caps
-        toggle-color="primary"
-        :options="[
-          { label: t('statistika.tjedan'), value: 'tjedan' },
-          { label: t('statistika.mjesec'), value: 'mjesec' },
-        ]"
-        @update:model-value="statsStore.ucitaj"
-      />
+  <q-page class="q-pa-md" style="max-width: 600px">
+    <div class="text-h6 q-mb-md">{{ t('statistika.naslov') }}</div>
+    <q-btn-toggle
+      :model-value="statsStore.razdoblje"
+      @update:model-value="promijeniRazdoblje"
+      spread
+      no-caps
+      toggle-color="primary"
+      color="grey-3"
+      text-color="grey-8"
+      :options="[
+        { label: t('statistika.ovajTjedan'), value: 'tjedan' },
+        { label: t('statistika.ovajMjesec'), value: 'mjesec' },
+      ]"
+      class="q-mb-lg"
+    />
+    <div v-if="statsStore.ucitavanje" class="flex flex-center q-pa-lg">
+      <q-spinner size="2em" color="primary" />
     </div>
-
-    <div class="row q-col-gutter-md">
-      <div class="col-12 col-md-6" v-for="(clan, indeks) in statsStore.poKorisniku" :key="clan.id">
-        <q-card flat bordered class="q-pa-md">
-          <div class="row items-center q-gutter-sm">
-            <q-icon
-              :name="
-                indeks === 0
-                  ? 'emoji_events'
-                  : indeks === statsStore.poKorisniku.length - 1
-                    ? 'trending_down'
-                    : 'person'
-              "
-              :color="indeks === 0 ? 'amber' : 'grey'"
-              size="28px"
-            />
+    <template v-else>
+      <div v-if="statsStore.poKorisniku.length === 0" class="text-grey-6">
+        {{ t('statistika.nemaClanova') }}
+      </div>
+      <div v-else class="column q-gutter-md q-mb-lg">
+        <q-banner v-if="statsStore.ukupnoZavrseno === 0" class="bg-grey-3 text-grey-8">
+          {{ t('statistika.nemaZavrsenih') }}
+        </q-banner>
+        <q-card v-for="(clan, indeks) in statsStore.poKorisniku" :key="clan.id" flat bordered>
+          <q-card-section class="row items-center q-gutter-md">
+            <q-avatar size="40px">
+              <img v-if="clan.profil_slika" :src="clan.profil_slika" />
+              <q-icon v-else name="person" color="grey-5" />
+            </q-avatar>
             <div class="col">
-              <div class="text-subtitle1">{{ clan.ime }}</div>
+              <div class="row items-center q-gutter-xs">
+                <div class="text-subtitle1">{{ clan.ime }}</div>
+                <q-icon
+                  v-if="indeks === 0 && clan.broj_zavrsenih > 0"
+                  name="emoji_events"
+                  color="amber-8"
+                  size="20px"
+                />
+                <q-icon
+                  v-if="jeNajmanjiClan(clan, indeks)"
+                  name="trending_down"
+                  color="grey-6"
+                  size="18px"
+                />
+              </div>
               <q-linear-progress
-                :value="
-                  statsStore.ukupnoZavrseno ? clan.broj_zavrsenih / statsStore.ukupnoZavrseno : 0
-                "
+                :value="najviseZavrsenih > 0 ? clan.broj_zavrsenih / najviseZavrsenih : 0"
                 color="primary"
+                track-color="grey-3"
+                rounded
+                size="8px"
                 class="q-mt-xs"
               />
             </div>
             <div class="text-h6">{{ clan.broj_zavrsenih }}</div>
-          </div>
+          </q-card-section>
         </q-card>
       </div>
-    </div>
-
-    <q-card flat bordered class="q-pa-md q-mt-md" v-if="statsStore.poZadatku.length">
-      <div class="text-subtitle2">
-        {{ t('statistika.najcesceOdradjen') }}: <b>{{ statsStore.poZadatku[0].naziv }}</b> ({{
-          statsStore.poZadatku[0].broj
-        }}×)
-      </div>
-      <div class="text-subtitle2 q-mt-xs">
-        {{ t('statistika.najmanjeOdradjen') }}:
-        <b>{{ statsStore.poZadatku[statsStore.poZadatku.length - 1].naziv }}</b>
-        ({{ statsStore.poZadatku[statsStore.poZadatku.length - 1].broj }}×)
-      </div>
-    </q-card>
-
-    <q-card flat bordered class="q-pa-md q-mt-md" v-if="statsStore.najviseProneseno.length">
-      <div class="text-subtitle2 q-mb-sm">{{ t('statistika.top3Naslov') }}</div>
-      <q-list dense>
-        <q-item v-for="stavka in statsStore.najviseProneseno" :key="stavka.naziv">
-          <q-item-section>{{ stavka.naziv }}</q-item-section>
-          <q-item-section side>{{ stavka.broj }}×</q-item-section>
-        </q-item>
-      </q-list>
-    </q-card>
+      <q-card v-if="statsStore.poZadatku.length > 0" flat bordered class="q-mb-lg">
+        <q-card-section>
+          <div class="text-subtitle1 q-mb-sm">{{ t('statistika.najcesceNajmanjeNaslov') }}</div>
+          <div class="row items-center q-gutter-sm q-mb-xs">
+            <q-icon name="repeat" color="positive" />
+            <div>
+              {{ t('statistika.najcesce') }}:
+              <strong>{{ statsStore.poZadatku[0].naziv }}</strong> ({{
+                statsStore.poZadatku[0].broj
+              }}×)
+            </div>
+          </div>
+          <div v-if="najmanjeOdradjeni" class="row items-center q-gutter-sm">
+            <q-icon name="hourglass_empty" color="grey-6" />
+            <div>
+              {{ t('statistika.najmanje') }}: <strong>{{ najmanjeOdradjeni.naziv }}</strong> ({{
+                najmanjeOdradjeni.broj
+              }}×)
+            </div>
+          </div>
+        </q-card-section>
+      </q-card>
+      <q-card v-if="statsStore.najviseProneseno.length > 0" flat bordered>
+        <q-card-section>
+          <div class="text-subtitle1 q-mb-sm">{{ t('statistika.top3Naslov') }}</div>
+          <div class="text-caption text-grey-6 q-mb-sm">{{ t('statistika.top3Opis') }}</div>
+          <q-list separator>
+            <q-item v-for="(stavka, i) in statsStore.najviseProneseno" :key="stavka.naziv">
+              <q-item-section avatar>
+                <div class="text-weight-bold text-grey-6">#{{ i + 1 }}</div>
+              </q-item-section>
+              <q-item-section>{{ stavka.naziv }}</q-item-section>
+              <q-item-section side>
+                <q-badge color="negative"
+                  >{{ stavka.broj }}× {{ t('statistika.preneseno') }}</q-badge
+                >
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-card-section>
+      </q-card>
+      <div v-else class="text-grey-6">{{ t('statistika.nemaPrenesenih') }}</div>
+    </template>
   </q-page>
 </template>
-
 <script setup>
-import { ref, onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useStatsStore } from '@/stores/stats-store'
 
 const { t } = useI18n()
 const statsStore = useStatsStore()
-const razdoblje = ref('tjedan')
-
-onMounted(() => statsStore.ucitaj(razdoblje.value))
+onMounted(() => {
+  statsStore.ucitaj('tjedan')
+})
+const najviseZavrsenih = computed(() => statsStore.poKorisniku[0]?.broj_zavrsenih || 0)
+const najmanjeOdradjeni = computed(() => {
+  if (statsStore.poZadatku.length <= 1) return null
+  return statsStore.poZadatku[statsStore.poZadatku.length - 1]
+})
+function promijeniRazdoblje(razdoblje) {
+  statsStore.ucitaj(razdoblje)
+}
+function jeNajmanjiClan(clan, indeks) {
+  if (statsStore.poKorisniku.length <= 1) return false
+  const najmanje = statsStore.poKorisniku[statsStore.poKorisniku.length - 1].broj_zavrsenih
+  return indeks === statsStore.poKorisniku.length - 1 && najmanje < najviseZavrsenih.value
+}
 </script>
