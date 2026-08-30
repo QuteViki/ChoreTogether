@@ -10,6 +10,19 @@
             dense
             :rules="[(val) => !!val || t('common.obavezno')]"
           />
+          <div v-if="prijedlozi.length > 0" class="row q-gutter-xs q-mt-xs">
+            <q-chip
+              v-for="prijedlog in prijedlozi"
+              :key="prijedlog"
+              clickable
+              dense
+              color="grey-3"
+              text-color="grey-9"
+              @click="noviNaziv = prijedlog"
+            >
+              {{ prijedlog }}
+            </q-chip>
+          </div>
         </div>
         <div class="col-6 col-sm-3">
           <q-input
@@ -196,9 +209,11 @@
 import { ref, computed, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useTasksStore } from '@/stores/tasks-store'
+import { useAuthStore } from '@/stores/auth-store'
 
 const { t, locale } = useI18n()
 const tasksStore = useTasksStore()
+const authStore = useAuthStore()
 
 const paletaBoja = ['blue', 'teal', 'deep-orange', 'purple', 'indigo', 'brown', 'pink']
 
@@ -214,6 +229,30 @@ const opcijeTipa = computed(() => [
   { label: t('pregled.zadatak'), value: 'zadatak' },
   { label: t('pregled.dogadaj'), value: 'dogadaj' },
 ])
+
+// Prijedlozi za brzo dodavanje: nazivi zadataka koje je OVAJ korisnik
+// ranije dodavao, poredani po učestalosti, suženi prema onome što upravo tipka.
+const prijedlozi = computed(() => {
+  const mojId = authStore.korisnik?.id
+  if (!mojId) return []
+
+  const brojac = new Map()
+  for (const s of tasksStore.stavke) {
+    if (s.dodao_id !== mojId) continue
+    const naziv = s.naziv?.trim()
+    if (!naziv) continue
+    brojac.set(naziv, (brojac.get(naziv) || 0) + 1)
+  }
+
+  const upisano = noviNaziv.value.trim().toLowerCase()
+  let popis = [...brojac.entries()]
+    .filter(([naziv]) => naziv.toLowerCase() !== upisano)
+    .filter(([naziv]) => !upisano || naziv.toLowerCase().includes(upisano))
+    .sort((a, b) => b[1] - a[1])
+    .map(([naziv]) => naziv)
+
+  return popis.slice(0, 6)
+})
 
 function danasnjiDatumString() {
   const d = new Date()

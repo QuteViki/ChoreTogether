@@ -22,8 +22,8 @@ stavkeRoute.post("/", async (req, res) => {
   }
 
   const rezultat = await pool.query(
-    "INSERT INTO stavke (household_id, tip, naziv, datum, boja) VALUES ($1, $2, $3, $4, $5) RETURNING *",
-    [req.householdId, tip, naziv, datum, boja || "blue"],
+    "INSERT INTO stavke (household_id, tip, naziv, datum, boja, dodao_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
+    [req.householdId, tip, naziv, datum, boja || "blue", req.userId],
   );
   const novaStavka = rezultat.rows[0];
 
