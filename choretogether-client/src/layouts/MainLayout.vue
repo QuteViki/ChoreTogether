@@ -48,7 +48,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useShoppingStore } from '@/stores/shopping-store'
@@ -56,6 +56,8 @@ import { useTasksStore } from '@/stores/tasks-store'
 import { useAuthStore } from '@/stores/auth-store'
 import { useThemeStore } from '@/stores/theme-store'
 import { useLocaleStore } from '@/stores/locale-store'
+
+const INTERVAL_OSVJEZAVANJA = 8000 // 8 sekundi
 
 const { t } = useI18n()
 const drawerOtvoren = ref(false)
@@ -68,11 +70,23 @@ const themeStore = useThemeStore()
 const localeStore = useLocaleStore()
 const router = useRouter()
 
+let intervalId = null
+
+async function ucitajSvjeziPodatke() {
+  await Promise.all([tasksStore.ucitajStavke(), shoppingStore.ucitajListe()])
+}
+
 onMounted(async () => {
   themeStore.primijeniOdKorisnika(authStore.korisnik)
   localeStore.primijeniOdKorisnika(authStore.korisnik)
-  await Promise.all([tasksStore.ucitajStavke(), shoppingStore.ucitajListe()])
+  await ucitajSvjeziPodatke()
   ucitano.value = true
+
+  intervalId = setInterval(ucitajSvjeziPodatke, INTERVAL_OSVJEZAVANJA)
+})
+
+onUnmounted(() => {
+  clearInterval(intervalId)
 })
 
 const linkovi = computed(() => {
