@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">ChoreTogether</string>
+    <string name="title_activity_main">ChoreTogether</string>
+    <string name="package_name">space.choretogether.app</string>
+    <string name="custom_url_scheme">space.choretogether.app</string>
+</resources>

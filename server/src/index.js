@@ -16,6 +16,8 @@ app.use(
       "https://choretogether.space",
       "https://www.choretogether.space",
       "http://localhost:9000",
+      "capacitor://localhost",
+      "https://localhost",
     ],
   }),
 );
