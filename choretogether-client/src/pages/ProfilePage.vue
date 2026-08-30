@@ -1,6 +1,6 @@
 <template>
   <q-page class="q-pa-md" style="max-width: 500px">
-    <div class="text-h6 q-mb-md">Profil</div>
+    <div class="text-h6 q-mb-md">{{ t('profil.naslov') }}</div>
 
     <q-card flat bordered class="q-mb-lg">
       <q-card-section class="column items-center">
@@ -11,7 +11,7 @@
 
         <q-file
           v-model="odabranaDatoteka"
-          label="Promijeni profilnu sliku"
+          :label="t('profil.promijeniSliku')"
           accept="image/*"
           dense
           outlined
@@ -22,7 +22,7 @@
 
         <q-input
           v-model="ime"
-          label="Ime"
+          :label="t('profil.ime')"
           dense
           outlined
           class="full-width q-mt-md"
@@ -36,25 +36,25 @@
 
     <q-card flat bordered class="q-mb-lg">
       <q-card-section>
-        <div class="text-subtitle1 q-mb-sm">Kućanstvo</div>
+        <div class="text-subtitle1 q-mb-sm">{{ t('profil.kucanstvo') }}</div>
         <div v-if="householdStore.kucanstvo">
           <q-input
             v-model="nazivKucanstva"
             dense
             outlined
-            label="Naziv kućanstva"
+            :label="t('profil.nazivKucanstva')"
             @blur="spremiNazivKucanstva"
           />
 
           <div class="row items-center q-mt-sm q-gutter-sm">
-            <div class="text-caption text-grey-7">Pozivni kod:</div>
+            <div class="text-caption text-grey-7">{{ t('profil.pozivniKod') }}</div>
             <q-chip color="grey-3" text-color="black">{{
               householdStore.kucanstvo.invite_code
             }}</q-chip>
             <q-btn flat dense round icon="content_copy" size="sm" @click="kopirajKod" />
           </div>
 
-          <div class="text-caption text-grey-7 q-mt-md q-mb-xs">Članovi</div>
+          <div class="text-caption text-grey-7 q-mt-md q-mb-xs">{{ t('profil.clanovi') }}</div>
           <q-list separator>
             <q-item v-for="clan in householdStore.clanovi" :key="clan.id">
               <q-item-section avatar>
@@ -76,7 +76,7 @@
     <q-btn
       color="negative"
       outline
-      label="Odjava"
+      :label="t('profil.odjava')"
       icon="logout"
       class="full-width"
       @click="odjava"
@@ -86,10 +86,12 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth-store'
 import { useHouseholdStore } from '@/stores/household-store'
 
+const { t } = useI18n()
 const authStore = useAuthStore()
 const householdStore = useHouseholdStore()
 const router = useRouter()
@@ -127,7 +129,7 @@ function ucitajSliku(datoteka) {
   if (!datoteka) return
 
   if (datoteka.size > 1.5 * 1024 * 1024) {
-    greskaSlika.value = 'Slika je prevelika (maks. 1.5 MB).'
+    greskaSlika.value = t('profil.slikaPrevelika')
     odabranaDatoteka.value = null
     return
   }
@@ -137,7 +139,7 @@ function ucitajSliku(datoteka) {
     try {
       await authStore.azurirajProfilnu(citac.result)
     } catch {
-      greskaSlika.value = 'Slanje slike nije uspjelo.'
+      greskaSlika.value = t('profil.slanjeSlikeNeuspjelo')
     } finally {
       odabranaDatoteka.value = null
     }

@@ -1,7 +1,7 @@
 <template>
   <q-page class="q-pa-md">
     <div v-if="shoppingStore.liste.length === 0" class="text-grey-6">
-      Trenutno nema aktivnih popisa za kupovinu.
+      {{ t('kupovina.nemaListi') }}
     </div>
 
     <div class="column q-gutter-md">
@@ -80,7 +80,12 @@
         <q-card-section>
           <q-form @submit="posaljiNovuStavku(lista.id)" class="row q-col-gutter-sm items-center">
             <div class="col-7">
-              <q-input v-model="noviNazivi[lista.id]" dense outlined placeholder="Nova stavka" />
+              <q-input
+                v-model="noviNazivi[lista.id]"
+                dense
+                outlined
+                :placeholder="t('kupovina.novaStavka')"
+              />
             </div>
             <div class="col-3">
               <q-input
@@ -89,7 +94,7 @@
                 outlined
                 type="number"
                 min="1"
-                placeholder="Kol."
+                :placeholder="t('kupovina.kolicinaKratica')"
               />
             </div>
             <div class="col-2">
@@ -104,9 +109,11 @@
 
 <script setup>
 import { reactive } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import { useShoppingStore } from '@/stores/shopping-store'
 
+const { t, locale } = useI18n()
 const shoppingStore = useShoppingStore()
 const $q = useQuasar()
 
@@ -138,6 +145,6 @@ function formatirajDatum(datumString) {
   const datumSamo = datumString.slice(0, 10)
   const [godina, mjesec, dan] = datumSamo.split('-').map(Number)
   const datum = new Date(godina, mjesec - 1, dan)
-  return datum.toLocaleDateString('hr-HR', { day: 'numeric', month: 'long', year: 'numeric' })
+  return datum.toLocaleDateString(locale.value, { day: 'numeric', month: 'long', year: 'numeric' })
 }
 </script>

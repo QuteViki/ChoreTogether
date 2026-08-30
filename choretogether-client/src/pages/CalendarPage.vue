@@ -1,7 +1,7 @@
 <template>
   <q-page padding>
     <div class="row items-center q-mb-md">
-      <div class="text-h5 col">Kalendar</div>
+      <div class="text-h5 col">{{ t('kalendar.naslov') }}</div>
       <q-btn flat dense icon="chevron_left" @click="kalendarRef.prev()" />
       <div class="q-mx-sm text-subtitle1">{{ nazivMjeseca }}</div>
       <q-btn flat dense icon="chevron_right" @click="kalendarRef.next()" />
@@ -34,12 +34,14 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { QCalendarMonth } from '@quasar/quasar-ui-qcalendar/QCalendarMonth'
 import '@quasar/quasar-ui-qcalendar/QCalendarMonth.css'
 import { useTasksStore } from '@/stores/tasks-store'
 
 defineOptions({ components: { QCalendarMonth } })
 
+const { t, locale } = useI18n()
 const tasksStore = useTasksStore()
 const kalendarRef = ref(null)
 const odabraniDatum = ref(new Date().toISOString().slice(0, 10))
@@ -54,12 +56,19 @@ function bojaZnacke(stavka) {
   return stavka.boja || 'blue'
 }
 
+function formatirajNazivMjeseca(godina, mjesec) {
+  return new Date(godina, mjesec - 1, 1).toLocaleDateString(locale.value, {
+    month: 'long',
+    year: 'numeric',
+  })
+}
+
 function osvjeziNazivMjeseca(podaci) {
-  nazivMjeseca.value = `${podaci.month}. ${podaci.year}.`
+  nazivMjeseca.value = formatirajNazivMjeseca(podaci.year, podaci.month)
 }
 
 onMounted(() => {
   const d = new Date()
-  nazivMjeseca.value = `${d.getMonth() + 1}. ${d.getFullYear()}.`
+  nazivMjeseca.value = formatirajNazivMjeseca(d.getFullYear(), d.getMonth() + 1)
 })
 </script>

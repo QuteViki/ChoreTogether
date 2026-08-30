@@ -5,20 +5,20 @@
         <div class="col-12 col-sm-4">
           <q-input
             v-model="noviNaziv"
-            label="Naziv"
+            :label="t('pregled.naziv')"
             outlined
             dense
-            :rules="[(val) => !!val || 'Obavezno']"
+            :rules="[(val) => !!val || t('common.obavezno')]"
           />
         </div>
         <div class="col-6 col-sm-3">
           <q-input
             v-model="noviDatum"
-            label="Datum"
+            :label="t('pregled.datum')"
             type="date"
             outlined
             dense
-            :rules="[(val) => !!val || 'Obavezno']"
+            :rules="[(val) => !!val || t('common.obavezno')]"
           />
         </div>
         <div class="col-6 col-sm-3">
@@ -27,7 +27,7 @@
             :options="opcijeTipa"
             emit-value
             map-options
-            label="Vrsta"
+            :label="t('pregled.vrsta')"
             outlined
             dense
           />
@@ -36,7 +36,7 @@
           <q-btn
             type="submit"
             color="primary"
-            label="Dodaj"
+            :label="t('pregled.dodaj')"
             class="full-width"
             :loading="spremaSe"
           />
@@ -44,7 +44,7 @@
       </div>
 
       <div class="row items-center q-gutter-xs q-mt-sm">
-        <div class="text-caption text-grey-7 q-mr-sm">Boja:</div>
+        <div class="text-caption text-grey-7 q-mr-sm">{{ t('pregled.boja') }}:</div>
         <q-btn
           v-for="boja in paletaBoja"
           :key="boja"
@@ -59,13 +59,15 @@
     </q-form>
 
     <q-tabs v-model="prikaz" class="text-primary q-mb-md" dense align="left">
-      <q-tab name="dan" label="Dan" />
-      <q-tab name="tjedan" label="Tjedan" />
+      <q-tab name="dan" :label="t('pregled.dan')" />
+      <q-tab name="tjedan" :label="t('pregled.tjedan')" />
     </q-tabs>
 
     <q-tab-panels v-model="prikaz" animated>
       <q-tab-panel name="dan" class="q-pa-none">
-        <div v-if="stavkeDanas.length === 0" class="text-grey-6 q-pa-md">Nemaš ništa za danas.</div>
+        <div v-if="stavkeDanas.length === 0" class="text-grey-6 q-pa-md">
+          {{ t('pregled.nemaZaDanas') }}
+        </div>
         <q-list v-else bordered separator class="rounded-borders">
           <q-item v-for="stavka in stavkeDanas" :key="stavka.id">
             <q-item-section v-if="stavka.tip === 'zadatak'" avatar>
@@ -103,7 +105,7 @@
                 {{ stavka.naziv }}
               </q-item-label>
               <q-item-label v-if="jeZaostalo(stavka)" caption class="text-negative">
-                Zaostalo ({{ formatirajKratkiDatum(stavka.datum) }})
+                {{ t('pregled.zaostalo') }} ({{ formatirajKratkiDatum(stavka.datum) }})
               </q-item-label>
             </q-item-section>
 
@@ -130,7 +132,7 @@
             </q-card-section>
 
             <q-card-section v-if="kartica.stavke.length === 0" class="text-grey-6 text-caption">
-              Nema stavki.
+              {{ t('pregled.nemaStavki') }}
             </q-card-section>
 
             <q-list v-else separator>
@@ -192,8 +194,10 @@
 
 <script setup>
 import { ref, computed, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useTasksStore } from '@/stores/tasks-store'
 
+const { t, locale } = useI18n()
 const tasksStore = useTasksStore()
 
 const paletaBoja = ['blue', 'teal', 'deep-orange', 'purple', 'indigo', 'brown', 'pink']
@@ -206,10 +210,10 @@ const noviBoja = ref('blue')
 const spremaSe = ref(false)
 const formRef = ref(null)
 
-const opcijeTipa = [
-  { label: 'Zadatak', value: 'zadatak' },
-  { label: 'Događaj', value: 'dogadaj' },
-]
+const opcijeTipa = computed(() => [
+  { label: t('pregled.zadatak'), value: 'zadatak' },
+  { label: t('pregled.dogadaj'), value: 'dogadaj' },
+])
 
 function danasnjiDatumString() {
   const d = new Date()
@@ -225,7 +229,7 @@ function formatirajUString(d) {
 
 function formatirajKratkiDatum(datumString) {
   const [godina, mjesec, dan] = datumString.slice(0, 10).split('-').map(Number)
-  return new Date(godina, mjesec - 1, dan).toLocaleDateString('hr-HR', {
+  return new Date(godina, mjesec - 1, dan).toLocaleDateString(locale.value, {
     day: 'numeric',
     month: 'numeric',
   })
@@ -238,7 +242,7 @@ function jeZaostalo(stavka) {
 async function posaljiNovuStavku() {
   if (noviDatum.value < danasnjiDatumString()) {
     const potvrdjeno = window.confirm(
-      `Datum ${formatirajKratkiDatum(noviDatum.value)} je već prošao. Želiš li ipak dodati ovu stavku?`,
+      t('pregled.potvrdaProslogDatuma', { datum: formatirajKratkiDatum(noviDatum.value) }),
     )
     if (!potvrdjeno) return
   }
@@ -282,8 +286,9 @@ const tjedanKartice = computed(() => {
 
     kartice.push({
       datumString,
-      naziv: i === 0 ? 'Danas' : datum.toLocaleDateString('hr-HR', { weekday: 'long' }),
-      prikazDatuma: datum.toLocaleDateString('hr-HR', { day: 'numeric', month: 'long' }),
+      naziv:
+        i === 0 ? t('pregled.danas') : datum.toLocaleDateString(locale.value, { weekday: 'long' }),
+      prikazDatuma: datum.toLocaleDateString(locale.value, { day: 'numeric', month: 'long' }),
       stavke: tasksStore.stavke.filter((s) => s.datum?.slice(0, 10) === datumString),
     })
   }
