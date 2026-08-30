@@ -26,6 +26,13 @@
 
       <q-card-actions vertical>
         <q-btn type="submit" color="primary" :label="t('auth.prijaviSe')" :loading="ucitavanje" />
+        <q-btn
+          flat
+          dense
+          color="grey-7"
+          :label="t('auth.zaboravljenaLozinka')"
+          to="/auth/zaboravljena-lozinka"
+        />
         <q-btn flat color="primary" :label="t('auth.nemasRacun')" to="/auth/registracija" />
       </q-card-actions>
     </q-form>

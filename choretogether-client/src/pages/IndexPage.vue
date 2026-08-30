@@ -18,7 +18,7 @@
               dense
               color="grey-3"
               text-color="grey-9"
-              @click="noviNaziv = prijedlog"
+              @click="odaberiPrijedlog(prijedlog)"
             >
               {{ prijedlog }}
             </q-chip>
@@ -295,6 +295,10 @@ async function posaljiNovuStavku() {
       t('pregled.potvrdaProslogDatuma', { datum: formatirajKratkiDatum(noviDatum.value) }),
     )
     if (!potvrdjeno) return
+  }
+  async function odaberiPrijedlog(prijedlog) {
+    noviNaziv.value = prijedlog
+    await posaljiNovuStavku()
   }
 
   spremaSe.value = true

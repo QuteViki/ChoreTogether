@@ -8,6 +8,11 @@ const routes = [
     children: [
       { path: 'prijava', component: () => import('@/pages/auth/LoginPage.vue') },
       { path: 'registracija', component: () => import('@/pages/auth/RegisterPage.vue') },
+      {
+        path: 'zaboravljena-lozinka',
+        component: () => import('@/pages/auth/ForgotPasswordPage.vue'),
+      },
+      { path: 'reset-lozinke', component: () => import('@/pages/auth/ResetLozinkePage.vue') },
     ],
   },
   {
