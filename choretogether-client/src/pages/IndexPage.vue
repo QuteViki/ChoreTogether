@@ -296,10 +296,6 @@ async function posaljiNovuStavku() {
     )
     if (!potvrdjeno) return
   }
-  async function odaberiPrijedlog(prijedlog) {
-    noviNaziv.value = prijedlog
-    await posaljiNovuStavku()
-  }
 
   spremaSe.value = true
   try {
@@ -318,6 +314,11 @@ async function posaljiNovuStavku() {
   } finally {
     spremaSe.value = false
   }
+}
+
+async function odaberiPrijedlog(prijedlog) {
+  noviNaziv.value = prijedlog
+  await posaljiNovuStavku()
 }
 
 const stavkeDanas = computed(() => {
