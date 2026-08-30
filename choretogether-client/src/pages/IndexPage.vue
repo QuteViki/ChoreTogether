@@ -67,9 +67,9 @@
         </div>
       </div>
 
-      <div v-if="prijedlozi.length > 0" class="row q-gutter-xs q-mt-sm">
+      <div v-if="prijedlozi.length > 0" class="row items-center q-gutter-xs q-mt-sm">
         <q-chip
-          v-for="prijedlog in prijedlozi"
+          v-for="prijedlog in vidljiviPrijedlozi"
           :key="prijedlog"
           clickable
           dense
@@ -79,6 +79,30 @@
         >
           {{ prijedlog }}
         </q-chip>
+
+        <q-btn
+          v-if="ostaliPrijedlozi.length > 0"
+          round
+          dense
+          flat
+          size="sm"
+          icon="expand_more"
+          color="grey-7"
+        >
+          <q-menu>
+            <q-list style="min-width: 180px">
+              <q-item
+                v-for="prijedlog in ostaliPrijedlozi"
+                :key="prijedlog"
+                clickable
+                v-close-popup
+                @click="odaberiPrijedlog(prijedlog)"
+              >
+                <q-item-section>{{ prijedlog }}</q-item-section>
+              </q-item>
+            </q-list>
+          </q-menu>
+        </q-btn>
       </div>
 
       <div class="row items-center q-gutter-xs q-mt-sm">
@@ -96,35 +120,49 @@
       </div>
     </q-form>
 
-    <q-select
-      v-model="filterClanId"
-      :options="opcijeClanova"
-      emit-value
-      map-options
-      clearable
-      outlined
-      dense
-      :label="t('pregled.filtrirajPoClanu')"
-      style="max-width: 280px"
-      class="q-mb-md"
-    >
-      <template v-slot:option="scope">
-        <q-item v-bind="scope.itemProps">
-          <q-item-section avatar>
-            <q-avatar size="24px">
-              <img v-if="scope.opt.slika" :src="scope.opt.slika" />
-              <q-icon v-else name="person" />
-            </q-avatar>
-          </q-item-section>
-          <q-item-section>{{ scope.opt.label }}</q-item-section>
-        </q-item>
-      </template>
-    </q-select>
+    <div class="row items-center justify-between q-mb-md">
+      <q-tabs v-model="prikaz" class="text-primary" dense align="left">
+        <q-tab name="dan" :label="t('pregled.dan')" />
+        <q-tab name="tjedan" :label="t('pregled.tjedan')" />
+      </q-tabs>
 
-    <q-tabs v-model="prikaz" class="text-primary q-mb-md" dense align="left">
-      <q-tab name="dan" :label="t('pregled.dan')" />
-      <q-tab name="tjedan" :label="t('pregled.tjedan')" />
-    </q-tabs>
+      <q-btn flat round dense icon="filter_list" :color="filterClanId ? 'primary' : 'grey-7'">
+        <q-badge v-if="filterClanId" color="primary" floating rounded />
+        <q-tooltip>{{ t('pregled.filtrirajPoClanu') }}</q-tooltip>
+        <q-menu>
+          <q-list style="min-width: 200px">
+            <q-item clickable v-close-popup @click="filterClanId = null">
+              <q-item-section avatar>
+                <q-icon name="group" />
+              </q-item-section>
+              <q-item-section>{{ t('pregled.sviClanovi') }}</q-item-section>
+              <q-item-section v-if="!filterClanId" side>
+                <q-icon name="check" color="primary" />
+              </q-item-section>
+            </q-item>
+            <q-separator />
+            <q-item
+              v-for="clan in clanovi"
+              :key="clan.id"
+              clickable
+              v-close-popup
+              @click="filterClanId = clan.id"
+            >
+              <q-item-section avatar>
+                <q-avatar size="24px">
+                  <img v-if="clan.profil_slika" :src="clan.profil_slika" />
+                  <q-icon v-else name="person" />
+                </q-avatar>
+              </q-item-section>
+              <q-item-section>{{ clan.ime }}</q-item-section>
+              <q-item-section v-if="filterClanId === clan.id" side>
+                <q-icon name="check" color="primary" />
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-menu>
+      </q-btn>
+    </div>
 
     <q-tab-panels v-model="prikaz" animated>
       <q-tab-panel name="dan" class="q-pa-none">
@@ -361,8 +399,13 @@ const prijedlozi = computed(() => {
   return spojeno
     .filter((naziv) => naziv.toLowerCase() !== upisano)
     .filter((naziv) => !upisano || naziv.toLowerCase().includes(upisano))
-    .slice(0, 6)
+    .slice(0, 20)
 })
+
+const BROJ_VIDLJIVIH_PRIJEDLOGA = 5
+
+const vidljiviPrijedlozi = computed(() => prijedlozi.value.slice(0, BROJ_VIDLJIVIH_PRIJEDLOGA))
+const ostaliPrijedlozi = computed(() => prijedlozi.value.slice(BROJ_VIDLJIVIH_PRIJEDLOGA))
 
 function danasnjiDatumString() {
   const d = new Date()
