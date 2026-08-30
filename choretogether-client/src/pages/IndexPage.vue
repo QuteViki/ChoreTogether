@@ -10,19 +10,6 @@
             dense
             :rules="[(val) => !!val || t('common.obavezno')]"
           />
-          <div v-if="prijedlozi.length > 0" class="row q-gutter-xs q-mt-xs">
-            <q-chip
-              v-for="prijedlog in prijedlozi"
-              :key="prijedlog"
-              clickable
-              dense
-              color="grey-3"
-              text-color="grey-9"
-              @click="odaberiPrijedlog(prijedlog)"
-            >
-              {{ prijedlog }}
-            </q-chip>
-          </div>
         </div>
         <div class="col-6 col-sm-3">
           <q-input
@@ -54,6 +41,20 @@
             :loading="spremaSe"
           />
         </div>
+      </div>
+
+      <div v-if="prijedlozi.length > 0" class="row q-gutter-xs q-mt-sm">
+        <q-chip
+          v-for="prijedlog in prijedlozi"
+          :key="prijedlog"
+          clickable
+          dense
+          color="grey-3"
+          text-color="grey-9"
+          @click="odaberiPrijedlog(prijedlog)"
+        >
+          {{ prijedlog }}
+        </q-chip>
       </div>
 
       <div class="row items-center q-gutter-xs q-mt-sm">
