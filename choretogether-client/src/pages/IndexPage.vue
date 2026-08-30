@@ -96,6 +96,31 @@
       </div>
     </q-form>
 
+    <q-select
+      v-model="filterClanId"
+      :options="opcijeClanova"
+      emit-value
+      map-options
+      clearable
+      outlined
+      dense
+      :label="t('pregled.filtrirajPoClanu')"
+      style="max-width: 280px"
+      class="q-mb-md"
+    >
+      <template v-slot:option="scope">
+        <q-item v-bind="scope.itemProps">
+          <q-item-section avatar>
+            <q-avatar size="24px">
+              <img v-if="scope.opt.slika" :src="scope.opt.slika" />
+              <q-icon v-else name="person" />
+            </q-avatar>
+          </q-item-section>
+          <q-item-section>{{ scope.opt.label }}</q-item-section>
+        </q-item>
+      </template>
+    </q-select>
+
     <q-tabs v-model="prikaz" class="text-primary q-mb-md" dense align="left">
       <q-tab name="dan" :label="t('pregled.dan')" />
       <q-tab name="tjedan" :label="t('pregled.tjedan')" />
@@ -145,6 +170,19 @@
               <q-item-label v-if="jeZaostalo(stavka)" caption class="text-negative">
                 {{ t('pregled.zaostalo') }} ({{ formatirajKratkiDatum(stavka.datum) }})
               </q-item-label>
+            </q-item-section>
+
+            <q-item-section v-if="clanZaStavku(stavka)" side>
+              <div class="row items-center q-gutter-xs">
+                <q-avatar size="24px">
+                  <img
+                    v-if="clanZaStavku(stavka).profil_slika"
+                    :src="clanZaStavku(stavka).profil_slika"
+                  />
+                  <q-icon v-else name="person" />
+                </q-avatar>
+                <div class="text-caption text-grey-7">{{ clanZaStavku(stavka).ime }}</div>
+              </div>
             </q-item-section>
 
             <q-item-section side>
@@ -211,6 +249,19 @@
                   </q-item-label>
                 </q-item-section>
 
+                <q-item-section v-if="clanZaStavku(stavka)" side>
+                  <div class="row items-center q-gutter-xs">
+                    <q-avatar size="24px">
+                      <img
+                        v-if="clanZaStavku(stavka).profil_slika"
+                        :src="clanZaStavku(stavka).profil_slika"
+                      />
+                      <q-icon v-else name="person" />
+                    </q-avatar>
+                    <div class="text-caption text-grey-7">{{ clanZaStavku(stavka).ime }}</div>
+                  </div>
+                </q-item-section>
+
                 <q-item-section side>
                   <q-btn
                     flat
@@ -252,6 +303,7 @@ const noviDodijeljenoId = ref(null)
 const spremaSe = ref(false)
 const formRef = ref(null)
 const clanovi = ref([])
+const filterClanId = ref(null)
 
 const opcijeTipa = computed(() => [
   { label: t('pregled.zadatak'), value: 'zadatak' },
@@ -270,6 +322,10 @@ onMounted(async () => {
     clanovi.value = []
   }
 })
+
+function clanZaStavku(stavka) {
+  return clanovi.value.find((c) => c.id === stavka.dodijeljeno_id) || null
+}
 
 // Prijedlozi za brzo dodavanje: prvo osobna povijest (ono što je OVAJ
 // korisnik ranije dodavao, poredano po učestalosti), a zatim generic
@@ -370,6 +426,7 @@ async function odaberiPrijedlog(prijedlog) {
 const stavkeDanas = computed(() => {
   const danas = danasnjiDatumString()
   return tasksStore.stavke.filter((s) => {
+    if (filterClanId.value && s.dodijeljeno_id !== filterClanId.value) return false
     const datumStavke = s.datum?.slice(0, 10)
     if (!datumStavke) return false
     if (datumStavke === danas) return true
@@ -390,7 +447,11 @@ const tjedanKartice = computed(() => {
       naziv:
         i === 0 ? t('pregled.danas') : datum.toLocaleDateString(locale.value, { weekday: 'long' }),
       prikazDatuma: datum.toLocaleDateString(locale.value, { day: 'numeric', month: 'long' }),
-      stavke: tasksStore.stavke.filter((s) => s.datum?.slice(0, 10) === datumString),
+      stavke: tasksStore.stavke.filter(
+        (s) =>
+          s.datum?.slice(0, 10) === datumString &&
+          (!filterClanId.value || s.dodijeljeno_id === filterClanId.value),
+      ),
     })
   }
   return kartice

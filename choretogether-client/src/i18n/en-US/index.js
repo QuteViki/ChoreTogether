@@ -103,6 +103,8 @@ export default {
     potvrdaProslogDatuma:
       'The date {datum} has already passed. Do you still want to add this item?',
     dodijeljeno: 'Assigned to',
+    filtrirajPoClanu: 'Filter by member',
+    sviClanovi: 'Everyone',
     prijedloziGeneric: [
       'Wash the dishes',
       'Vacuum',

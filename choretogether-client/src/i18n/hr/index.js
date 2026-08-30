@@ -103,6 +103,8 @@ export default {
     dogadaj: 'Događaj',
     potvrdaProslogDatuma: 'Datum {datum} je već prošao. Želiš li ipak dodati ovu stavku?',
     dodijeljeno: 'Dodijeljeno',
+    filtrirajPoClanu: 'Filtriraj po članu',
+    sviClanovi: 'Svi',
     prijedloziGeneric: [
       'Oprati suđe',
       'Usisati',
