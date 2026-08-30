@@ -211,7 +211,7 @@ import { useI18n } from 'vue-i18n'
 import { useTasksStore } from '@/stores/tasks-store'
 import { useAuthStore } from '@/stores/auth-store'
 
-const { t, locale } = useI18n()
+const { t, tm, locale } = useI18n()
 const tasksStore = useTasksStore()
 const authStore = useAuthStore()
 
@@ -234,24 +234,35 @@ const opcijeTipa = computed(() => [
 // ranije dodavao, poredani po učestalosti, suženi prema onome što upravo tipka.
 const prijedlozi = computed(() => {
   const mojId = authStore.korisnik?.id
-  if (!mojId) return []
+  const upisano = noviNaziv.value.trim().toLowerCase()
 
   const brojac = new Map()
-  for (const s of tasksStore.stavke) {
-    if (s.dodao_id !== mojId) continue
-    const naziv = s.naziv?.trim()
-    if (!naziv) continue
-    brojac.set(naziv, (brojac.get(naziv) || 0) + 1)
+  if (mojId) {
+    for (const s of tasksStore.stavke) {
+      if (s.dodao_id !== mojId) continue
+      const naziv = s.naziv?.trim()
+      if (!naziv) continue
+      brojac.set(naziv, (brojac.get(naziv) || 0) + 1)
+    }
   }
 
-  const upisano = noviNaziv.value.trim().toLowerCase()
-  let popis = [...brojac.entries()]
-    .filter(([naziv]) => naziv.toLowerCase() !== upisano)
-    .filter(([naziv]) => !upisano || naziv.toLowerCase().includes(upisano))
-    .sort((a, b) => b[1] - a[1])
-    .map(([naziv]) => naziv)
+  const osobni = [...brojac.entries()].sort((a, b) => b[1] - a[1]).map(([naziv]) => naziv)
 
-  return popis.slice(0, 6)
+  const generic = tm('pregled.prijedloziGeneric')
+
+  const vecDodano = new Set(osobni.map((n) => n.toLowerCase()))
+  const spojeno = [...osobni]
+  for (const naziv of generic) {
+    const kljuc = naziv.toLowerCase()
+    if (vecDodano.has(kljuc)) continue
+    vecDodano.add(kljuc)
+    spojeno.push(naziv)
+  }
+
+  return spojeno
+    .filter((naziv) => naziv.toLowerCase() !== upisano)
+    .filter((naziv) => !upisano || naziv.toLowerCase().includes(upisano))
+    .slice(0, 6)
 })
 
 function danasnjiDatumString() {
