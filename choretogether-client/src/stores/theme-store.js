@@ -9,6 +9,8 @@ export const BOJE_TEME = [
   { kljuc: 'narancasta', naziv: 'Narančasta', boja: '#F2751B' },
   { kljuc: 'roza', naziv: 'Roza', boja: '#EC407A' },
   { kljuc: 'tirkizna', naziv: 'Tirkizna', boja: '#00ACC1' },
+  { kljuc: 'crvena', naziv: 'Crvena', boja: '#b70c00' },
+  { kljuc: 'siva', naziv: 'Siva', boja: '#a0a0a0' },
 ]
 
 export const useThemeStore = defineStore('theme', {

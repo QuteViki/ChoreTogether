@@ -402,7 +402,7 @@ const prijedlozi = computed(() => {
     .slice(0, 20)
 })
 
-const BROJ_VIDLJIVIH_PRIJEDLOGA = 7
+const BROJ_VIDLJIVIH_PRIJEDLOGA = 5
 
 const vidljiviPrijedlozi = computed(() => prijedlozi.value.slice(0, BROJ_VIDLJIVIH_PRIJEDLOGA))
 const ostaliPrijedlozi = computed(() => prijedlozi.value.slice(BROJ_VIDLJIVIH_PRIJEDLOGA))
