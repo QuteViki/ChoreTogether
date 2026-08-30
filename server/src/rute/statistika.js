@@ -22,7 +22,6 @@ statistikaRoute.get("/", async (req, res) => {
     [req.householdId, brojDana],
   );
 
-  // Koliko puta je koji NAZIV zadatka odrađen u ovom razdoblju
   const poZadatkuRezultat = await pool.query(
     `SELECT naziv, COUNT(*)::int AS broj
      FROM stavke
@@ -34,8 +33,6 @@ statistikaRoute.get("/", async (req, res) => {
     [req.householdId, brojDana],
   );
 
-  // Top 3 zadatka koji trenutno najčešće "vise" prošli rok, a nisu odrađeni
-  // (ovo nije vezano uz odabrano razdoblje — uvijek prikazuje trenutno stanje)
   const prenesenoRezultat = await pool.query(
     `SELECT naziv, COUNT(*)::int AS broj
      FROM stavke
@@ -61,4 +58,25 @@ statistikaRoute.get("/", async (req, res) => {
     poZadatku: poZadatkuRezultat.rows,
     najviseProneseno: prenesenoRezultat.rows,
   });
+});
+
+// Detaljan popis zadataka koje je konkretan član kućanstva odradio u
+// odabranom razdoblju — koristi se za prikaz nakon klika na člana na
+// stranici statistike. Household provjera je automatska jer se filtrira
+// po req.householdId, pa netko iz drugog kućanstva ne može dohvatiti tuđe podatke.
+statistikaRoute.get("/korisnik/:id", async (req, res) => {
+  const razdoblje = req.query.razdoblje === "mjesec" ? "mjesec" : "tjedan";
+  const brojDana = razdoblje === "mjesec" ? 30 : 7;
+
+  const rezultat = await pool.query(
+    `SELECT id, naziv, datum, boja, zavrseno_at
+     FROM stavke
+     WHERE household_id = $1
+       AND zavrsio_id = $2
+       AND zavrseno_at >= NOW() - ($3 || ' days')::interval
+     ORDER BY zavrseno_at DESC`,
+    [req.householdId, req.params.id, brojDana],
+  );
+
+  res.json(rezultat.rows);
 });

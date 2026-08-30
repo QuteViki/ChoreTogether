@@ -9,6 +9,8 @@ export const useStatsStore = defineStore('stats', {
     poZadatku: [],
     najviseProneseno: [],
     ucitavanje: false,
+    zadaciClana: [],
+    ucitavanjeZadataka: false,
   }),
 
   actions: {
@@ -23,6 +25,19 @@ export const useStatsStore = defineStore('stats', {
         this.najviseProneseno = data.najviseProneseno
       } finally {
         this.ucitavanje = false
+      }
+    },
+
+    async ucitajZadatkeClana(korisnikId) {
+      this.ucitavanjeZadataka = true
+      this.zadaciClana = []
+      try {
+        const { data } = await api.get(`/statistika/korisnik/${korisnikId}`, {
+          params: { razdoblje: this.razdoblje },
+        })
+        this.zadaciClana = data
+      } finally {
+        this.ucitavanjeZadataka = false
       }
     },
   },

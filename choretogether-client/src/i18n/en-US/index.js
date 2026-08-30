@@ -85,6 +85,9 @@ export default {
     top3Opis: 'Tasks that are currently waiting longer than their deadline.',
     preneseno: 'overdue',
     nemaPrenesenih: 'No overdue tasks right now. 🎉',
+    detaljiNaslov: 'Completed tasks',
+    nemaOdradjenih: 'No completed tasks in this period.',
+    zatvori: 'Close',
   },
   pregled: {
     naziv: 'Name',

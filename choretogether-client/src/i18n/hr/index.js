@@ -86,6 +86,9 @@ export default {
     top3Opis: 'Zadaci koji trenutno čekaju dulje od svog roka.',
     preneseno: 'preneseno',
     nemaPrenesenih: 'Trenutno nema prenesenih (zaostalih) zadataka. 🎉',
+    detaljiNaslov: 'Odrađeni zadaci',
+    nemaOdradjenih: 'Nema odrađenih zadataka u ovom razdoblju.',
+    zatvori: 'Zatvori',
   },
   pregled: {
     naziv: 'Naziv',
