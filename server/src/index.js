@@ -10,7 +10,15 @@ import { statistikaRoute } from "./rute/statistika.js";
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors());
+app.use(
+  cors({
+    origin: [
+      "https://choretogether.space",
+      "https://www.choretogether.space",
+      "http://localhost:9000",
+    ],
+  }),
+);
 app.use(express.json({ limit: "2mb" }));
 app.use("/auth", authRoute);
 app.use("/households", householdsRoute);
