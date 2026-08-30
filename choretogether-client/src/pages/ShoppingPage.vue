@@ -5,47 +5,59 @@
     </div>
 
     <div class="column q-gutter-md">
-      <q-card
-        v-for="lista in shoppingStore.liste"
-        :key="lista.id"
-        flat
-        bordered
-        :class="klasaPozadine(lista.boja)"
-      >
-        <q-card-section class="row items-center q-pb-none">
-          <q-input
-            v-model="lista.naziv"
-            dense
-            borderless
-            input-class="text-h6 text-weight-medium"
-            class="col"
-            @blur="shoppingStore.azurirajListu(lista.id, { naziv: lista.naziv })"
-          />
-          <q-btn
-            flat
-            round
-            dense
-            icon="delete"
-            color="grey-7"
-            @click="shoppingStore.obrisiListu(lista.id)"
-          />
-        </q-card-section>
-
-        <q-card-section class="q-pt-none">
-          <div class="text-caption text-grey-7 q-mb-sm">{{ formatirajDatum(lista.datum) }}</div>
-
-          <div class="row q-gutter-xs q-mb-sm">
+      <q-card v-for="lista in shoppingStore.liste" :key="lista.id" flat bordered>
+        <div :class="klasaPozadine(lista.boja)">
+          <q-card-section class="row items-center q-pb-none">
+            <q-input
+              v-model="lista.naziv"
+              dense
+              borderless
+              input-class="text-h6 text-weight-medium"
+              class="col"
+              @blur="shoppingStore.azurirajListu(lista.id, { naziv: lista.naziv })"
+            />
             <q-btn
-              v-for="boja in paletaBoja"
-              :key="boja"
+              flat
               round
               dense
-              size="sm"
-              :color="boja"
-              :icon="lista.boja === boja ? 'check' : ''"
-              @click="odaberiBoju(lista, boja)"
+              icon="delete"
+              color="grey-7"
+              @click="shoppingStore.obrisiListu(lista.id)"
             />
-          </div>
+          </q-card-section>
+
+          <q-card-section class="q-pt-none">
+            <div class="text-caption text-grey-7 q-mb-sm">{{ formatirajDatum(lista.datum) }}</div>
+
+            <div class="row q-gutter-xs q-mb-sm">
+              <q-btn
+                v-for="boja in paletaBoja"
+                :key="boja"
+                round
+                dense
+                size="sm"
+                :color="boja"
+                :icon="lista.boja === boja ? 'check' : ''"
+                @click="odaberiBoju(lista, boja)"
+              />
+            </div>
+          </q-card-section>
+        </div>
+
+        <q-card-section>
+          <q-form @submit="posaljiNovuStavku(lista.id)" class="row q-col-gutter-sm items-center">
+            <div class="col-10">
+              <q-input
+                v-model="noviNazivi[lista.id]"
+                dense
+                outlined
+                :placeholder="t('kupovina.novaStavka')"
+              />
+            </div>
+            <div class="col-2">
+              <q-btn type="submit" dense flat round icon="add" color="primary" />
+            </div>
+          </q-form>
         </q-card-section>
 
         <q-separator />
@@ -76,32 +88,6 @@
             </q-item-section>
           </q-item>
         </q-list>
-
-        <q-card-section>
-          <q-form @submit="posaljiNovuStavku(lista.id)" class="row q-col-gutter-sm items-center">
-            <div class="col-7">
-              <q-input
-                v-model="noviNazivi[lista.id]"
-                dense
-                outlined
-                :placeholder="t('kupovina.novaStavka')"
-              />
-            </div>
-            <div class="col-3">
-              <q-input
-                v-model.number="noveKolicine[lista.id]"
-                dense
-                outlined
-                type="number"
-                min="1"
-                :placeholder="t('kupovina.kolicinaKratica')"
-              />
-            </div>
-            <div class="col-2">
-              <q-btn type="submit" dense flat round icon="add" color="primary" />
-            </div>
-          </q-form>
-        </q-card-section>
       </q-card>
     </div>
   </q-page>
@@ -120,7 +106,6 @@ const $q = useQuasar()
 const paletaBoja = ['blue', 'teal', 'deep-orange', 'purple', 'indigo', 'brown', 'pink']
 
 const noviNazivi = reactive({})
-const noveKolicine = reactive({})
 
 function klasaPozadine(boja) {
   return $q.dark.isActive ? `bg-${boja}-10` : `bg-${boja}-1`
@@ -134,10 +119,8 @@ function odaberiBoju(lista, boja) {
 async function posaljiNovuStavku(listaId) {
   const naziv = noviNazivi[listaId]
   if (!naziv) return
-  const kolicina = noveKolicine[listaId] || 1
-  await shoppingStore.dodajStavku(listaId, naziv, kolicina)
+  await shoppingStore.dodajStavku(listaId, naziv)
   noviNazivi[listaId] = ''
-  noveKolicine[listaId] = null
 }
 
 function formatirajDatum(datumString) {
