@@ -2,7 +2,7 @@
   <q-page class="q-pa-md">
     <q-form ref="formRef" @submit="posaljiNovuStavku" class="q-mb-lg">
       <div class="row q-col-gutter-sm items-start">
-        <div class="col-12 col-sm-4">
+        <div class="col-12 col-sm-3">
           <q-input
             v-model="noviNaziv"
             :label="t('pregled.naziv')"
@@ -11,7 +11,7 @@
             :rules="[(val) => !!val || t('common.obavezno')]"
           />
         </div>
-        <div class="col-6 col-sm-3">
+        <div class="col-6 col-sm-2">
           <q-input
             v-model="noviDatum"
             :label="t('pregled.datum')"
@@ -21,7 +21,7 @@
             :rules="[(val) => !!val || t('common.obavezno')]"
           />
         </div>
-        <div class="col-6 col-sm-3">
+        <div class="col-6 col-sm-2">
           <q-select
             v-model="noviTip"
             :options="opcijeTipa"
@@ -31,6 +31,30 @@
             outlined
             dense
           />
+        </div>
+        <div class="col-12 col-sm-3">
+          <q-select
+            v-model="noviDodijeljenoId"
+            :options="opcijeClanova"
+            emit-value
+            map-options
+            clearable
+            outlined
+            dense
+            :label="t('pregled.dodijeljeno')"
+          >
+            <template v-slot:option="scope">
+              <q-item v-bind="scope.itemProps">
+                <q-item-section avatar>
+                  <q-avatar size="24px">
+                    <img v-if="scope.opt.slika" :src="scope.opt.slika" />
+                    <q-icon v-else name="person" />
+                  </q-avatar>
+                </q-item-section>
+                <q-item-section>{{ scope.opt.label }}</q-item-section>
+              </q-item>
+            </template>
+          </q-select>
         </div>
         <div class="col-12 col-sm-2">
           <q-btn
@@ -207,8 +231,9 @@
 </template>
 
 <script setup>
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { api } from '@/boot/axios'
 import { useTasksStore } from '@/stores/tasks-store'
 import { useAuthStore } from '@/stores/auth-store'
 
@@ -223,16 +248,33 @@ const noviNaziv = ref('')
 const noviDatum = ref(danasnjiDatumString())
 const noviTip = ref('zadatak')
 const noviBoja = ref('blue')
+const noviDodijeljenoId = ref(null)
 const spremaSe = ref(false)
 const formRef = ref(null)
+const clanovi = ref([])
 
 const opcijeTipa = computed(() => [
   { label: t('pregled.zadatak'), value: 'zadatak' },
   { label: t('pregled.dogadaj'), value: 'dogadaj' },
 ])
 
-// Prijedlozi za brzo dodavanje: nazivi zadataka koje je OVAJ korisnik
-// ranije dodavao, poredani po učestalosti, suženi prema onome što upravo tipka.
+const opcijeClanova = computed(() =>
+  clanovi.value.map((c) => ({ label: c.ime, value: c.id, slika: c.profil_slika })),
+)
+
+onMounted(async () => {
+  try {
+    const { data } = await api.get('/households/moje')
+    clanovi.value = data.clanovi
+  } catch {
+    clanovi.value = []
+  }
+})
+
+// Prijedlozi za brzo dodavanje: prvo osobna povijest (ono što je OVAJ
+// korisnik ranije dodavao, poredano po učestalosti), a zatim generic
+// baza prijedloga koja postoji od početka (za nove korisnike/kućanstva
+// bez povijesti, ili dok ne popune sve slotove).
 const prijedlozi = computed(() => {
   const mojId = authStore.korisnik?.id
   const upisano = noviNaziv.value.trim().toLowerCase()
@@ -305,11 +347,13 @@ async function posaljiNovuStavku() {
       datum: noviDatum.value,
       tip: noviTip.value,
       boja: noviBoja.value,
+      dodijeljeno_id: noviDodijeljenoId.value,
     })
     noviNaziv.value = ''
     noviDatum.value = danasnjiDatumString()
     noviTip.value = 'zadatak'
     noviBoja.value = 'blue'
+    noviDodijeljenoId.value = null
     await nextTick()
     formRef.value.resetValidation()
   } finally {
@@ -319,6 +363,7 @@ async function posaljiNovuStavku() {
 
 async function odaberiPrijedlog(prijedlog) {
   noviNaziv.value = prijedlog
+  noviDodijeljenoId.value = authStore.korisnik?.id ?? null
   await posaljiNovuStavku()
 }
 

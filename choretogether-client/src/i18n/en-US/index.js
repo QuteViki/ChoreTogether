@@ -102,6 +102,7 @@ export default {
     dogadaj: 'Event',
     potvrdaProslogDatuma:
       'The date {datum} has already passed. Do you still want to add this item?',
+    dodijeljeno: 'Assigned to',
     prijedloziGeneric: [
       'Wash the dishes',
       'Vacuum',

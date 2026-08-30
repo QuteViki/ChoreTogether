@@ -14,24 +14,28 @@ stavkeRoute.get("/", async (req, res) => {
   );
   res.json(rezultat.rows);
 });
-
 stavkeRoute.post("/", async (req, res) => {
-  const { tip, naziv, datum, boja } = req.body;
+  const { tip, naziv, datum, boja, dodijeljeno_id } = req.body;
   if (!tip || !naziv || !datum) {
     return res.status(400).json({ greska: "tip, naziv i datum su obavezni." });
   }
-
   const rezultat = await pool.query(
-    "INSERT INTO stavke (household_id, tip, naziv, datum, boja, dodao_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-    [req.householdId, tip, naziv, datum, boja || "blue", req.userId],
+    "INSERT INTO stavke (household_id, tip, naziv, datum, boja, dodao_id, dodijeljeno_id) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
+    [
+      req.householdId,
+      tip,
+      naziv,
+      datum,
+      boja || "blue",
+      req.userId,
+      dodijeljeno_id || null,
+    ],
   );
   const novaStavka = rezultat.rows[0];
-
   const nazivZaUsporedbu = naziv.trim().toLowerCase();
   const jeZaKupovinu = OKIDACI_KUPOVINA.some((okidac) =>
     nazivZaUsporedbu.includes(okidac),
   );
-
   if (tip === "zadatak" && jeZaKupovinu) {
     await pool.query(
       "INSERT INTO popisi_kupovine (household_id, stavka_id, naziv, datum, boja) VALUES ($1, $2, $3, $4, $5)",
@@ -44,7 +48,6 @@ stavkeRoute.post("/", async (req, res) => {
       ],
     );
   }
-
   res.status(201).json(novaStavka);
 });
 

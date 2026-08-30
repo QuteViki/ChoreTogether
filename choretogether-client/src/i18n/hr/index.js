@@ -102,6 +102,7 @@ export default {
     zadatak: 'Zadatak',
     dogadaj: 'Događaj',
     potvrdaProslogDatuma: 'Datum {datum} je već prošao. Želiš li ipak dodati ovu stavku?',
+    dodijeljeno: 'Dodijeljeno',
     prijedloziGeneric: [
       'Oprati suđe',
       'Usisati',
