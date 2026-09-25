@@ -15,19 +15,19 @@ export const BOJE_TEME = [
 
 export const useThemeStore = defineStore('theme', {
   state: () => ({
-    nacin: 'auto',
-    boja: 'plava',
+    nacin: 'svijetla',
+    boja: 'ljubicasta',
   }),
 
   actions: {
     primijeniZaGosta() {
-      this.postaviNacinLokalno('auto')
-      this.postaviBojuLokalno('plava')
+      this.postaviNacinLokalno('svijetla')
+      this.postaviBojuLokalno('ljubicasta')
     },
 
     primijeniOdKorisnika(korisnik) {
-      this.postaviNacinLokalno(korisnik?.theme || 'auto')
-      this.postaviBojuLokalno(korisnik?.theme_colour || 'plava')
+      this.postaviNacinLokalno(korisnik?.theme || 'svijetla')
+      this.postaviBojuLokalno(korisnik?.theme_colour || 'ljubicasta')
     },
 
     postaviNacinLokalno(nacin) {
