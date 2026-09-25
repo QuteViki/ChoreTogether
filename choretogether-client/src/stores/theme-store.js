@@ -26,8 +26,8 @@ export const useThemeStore = defineStore('theme', {
     },
 
     primijeniOdKorisnika(korisnik) {
-      this.postaviNacinLokalno(korisnik?.tema_nacin || 'auto')
-      this.postaviBojuLokalno(korisnik?.tema_boja || 'plava')
+      this.postaviNacinLokalno(korisnik?.theme || 'auto')
+      this.postaviBojuLokalno(korisnik?.theme_colour || 'plava')
     },
 
     postaviNacinLokalno(nacin) {
@@ -44,12 +44,12 @@ export const useThemeStore = defineStore('theme', {
 
     async postaviNacin(nacin) {
       this.postaviNacinLokalno(nacin)
-      await useAuthStore().azurirajPostavkeTeme({ tema_nacin: nacin })
+      await useAuthStore().azurirajPostavkeTeme({ theme: nacin })
     },
 
     async postaviBoju(kljuc) {
       this.postaviBojuLokalno(kljuc)
-      await useAuthStore().azurirajPostavkeTeme({ tema_boja: kljuc })
+      await useAuthStore().azurirajPostavkeTeme({ theme_colour: kljuc })
     },
   },
 })

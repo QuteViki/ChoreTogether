@@ -24,7 +24,7 @@
             class="block ellipsis q-mb-xs"
             style="max-width: 100%"
           >
-            {{ stavka.naziv }}
+            {{ stavka.item }}
           </q-badge>
         </div>
       </template>
@@ -48,12 +48,12 @@ const odabraniDatum = ref(new Date().toISOString().slice(0, 10))
 const nazivMjeseca = ref('')
 
 function stavkeZaDan(datumString) {
-  return tasksStore.stavke.filter((s) => s.datum === datumString)
+  return tasksStore.stavke.filter((s) => s.item_date === datumString)
 }
 
 function bojaZnacke(stavka) {
-  if (stavka.gotovo) return 'grey'
-  return stavka.boja || 'blue'
+  if (stavka.completed) return 'grey'
+  return stavka.colour || 'blue'
 }
 
 function formatirajNazivMjeseca(godina, mjesec) {

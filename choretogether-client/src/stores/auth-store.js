@@ -35,8 +35,8 @@ export const useAuthStore = defineStore('auth', {
       localStorage.setItem('korisnik', JSON.stringify(this.korisnik))
     },
 
-    async azurirajIme(ime) {
-      const { data } = await api.patch('/auth/ime', { ime })
+    async azurirajIme(username) {
+      const { data } = await api.patch('/auth/ime', { username })
       this.azurirajKorisnika(data)
     },
 
@@ -45,12 +45,15 @@ export const useAuthStore = defineStore('auth', {
       this.azurirajKorisnika(data)
     },
 
-    async azurirajLozinku(staraLozinka, novaLozinka) {
-      await api.patch('/auth/lozinka', { staraLozinka, novaLozinka })
+    async azurirajLozinku(currentPassword, newPassword) {
+      await api.patch('/auth/lozinka', {
+        current_password: currentPassword,
+        new_password: newPassword,
+      })
     },
 
-    async azurirajProfilnu(slika) {
-      const { data } = await api.patch('/auth/profilna', { slika })
+    async azurirajProfilnu(profilePicture) {
+      const { data } = await api.patch('/auth/profilna', { profile_picture: profilePicture })
       this.azurirajKorisnika(data)
     },
 

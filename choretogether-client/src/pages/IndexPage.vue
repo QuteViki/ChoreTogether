@@ -150,11 +150,11 @@
             >
               <q-item-section avatar>
                 <q-avatar size="24px">
-                  <img v-if="clan.profil_slika" :src="clan.profil_slika" />
+                  <img v-if="clan.profile_picture" :src="clan.profile_picture" />
                   <q-icon v-else name="person" />
                 </q-avatar>
               </q-item-section>
-              <q-item-section>{{ clan.ime }}</q-item-section>
+              <q-item-section>{{ clan.username }}</q-item-section>
               <q-item-section v-if="filterClanId === clan.id" side>
                 <q-icon name="check" color="primary" />
               </q-item-section>
@@ -171,9 +171,9 @@
         </div>
         <q-list v-else bordered separator class="rounded-borders">
           <q-item v-for="stavka in stavkeDanas" :key="stavka.id">
-            <q-item-section v-if="stavka.tip === 'zadatak'" avatar>
+            <q-item-section v-if="stavka.item_type === 'zadatak'" avatar>
               <q-checkbox
-                :model-value="stavka.gotovo"
+                :model-value="stavka.completed"
                 @update:model-value="tasksStore.oznaciGotovo(stavka)"
               />
             </q-item-section>
@@ -183,7 +183,7 @@
 
             <q-item-section side>
               <q-btn flat round dense size="sm">
-                <q-icon name="circle" :color="stavka.boja || 'blue'" size="14px" />
+                <q-icon name="circle" :color="stavka.colour || 'blue'" size="14px" />
                 <q-menu>
                   <div class="row q-pa-sm q-gutter-xs">
                     <q-btn
@@ -193,7 +193,7 @@
                       dense
                       size="sm"
                       :color="boja"
-                      :icon="stavka.boja === boja ? 'check' : ''"
+                      :icon="stavka.colour === boja ? 'check' : ''"
                       @click="tasksStore.azurirajBoju(stavka, boja)"
                     />
                   </div>
@@ -202,11 +202,11 @@
             </q-item-section>
 
             <q-item-section>
-              <q-item-label :class="{ 'text-strike text-grey-6': stavka.gotovo }">
-                {{ stavka.naziv }}
+              <q-item-label :class="{ 'text-strike text-grey-6': stavka.completed }">
+                {{ stavka.item }}
               </q-item-label>
               <q-item-label v-if="jeZaostalo(stavka)" caption class="text-negative">
-                {{ t('pregled.zaostalo') }} ({{ formatirajKratkiDatum(stavka.datum) }})
+                {{ t('pregled.zaostalo') }} ({{ formatirajKratkiDatum(stavka.item_date) }})
               </q-item-label>
             </q-item-section>
 
@@ -214,12 +214,12 @@
               <div class="row items-center q-gutter-xs">
                 <q-avatar size="24px">
                   <img
-                    v-if="clanZaStavku(stavka).profil_slika"
-                    :src="clanZaStavku(stavka).profil_slika"
+                    v-if="clanZaStavku(stavka).profile_picture"
+                    :src="clanZaStavku(stavka).profile_picture"
                   />
                   <q-icon v-else name="person" />
                 </q-avatar>
-                <div class="text-caption text-grey-7">{{ clanZaStavku(stavka).ime }}</div>
+                <div class="text-caption text-grey-7">{{ clanZaStavku(stavka).username }}</div>
               </div>
             </q-item-section>
 
@@ -251,9 +251,9 @@
 
             <q-list v-else separator>
               <q-item v-for="stavka in kartica.stavke" :key="stavka.id">
-                <q-item-section v-if="stavka.tip === 'zadatak'" avatar>
+                <q-item-section v-if="stavka.item_type === 'zadatak'" avatar>
                   <q-checkbox
-                    :model-value="stavka.gotovo"
+                    :model-value="stavka.completed"
                     @update:model-value="tasksStore.oznaciGotovo(stavka)"
                   />
                 </q-item-section>
@@ -263,7 +263,7 @@
 
                 <q-item-section side>
                   <q-btn flat round dense size="sm">
-                    <q-icon name="circle" :color="stavka.boja || 'blue'" size="14px" />
+                    <q-icon name="circle" :color="stavka.colour || 'blue'" size="14px" />
                     <q-menu>
                       <div class="row q-pa-sm q-gutter-xs">
                         <q-btn
@@ -273,7 +273,7 @@
                           dense
                           size="sm"
                           :color="boja"
-                          :icon="stavka.boja === boja ? 'check' : ''"
+                          :icon="stavka.colour === boja ? 'check' : ''"
                           @click="tasksStore.azurirajBoju(stavka, boja)"
                         />
                       </div>
@@ -282,8 +282,8 @@
                 </q-item-section>
 
                 <q-item-section>
-                  <q-item-label :class="{ 'text-strike text-grey-6': stavka.gotovo }">
-                    {{ stavka.naziv }}
+                  <q-item-label :class="{ 'text-strike text-grey-6': stavka.completed }">
+                    {{ stavka.item }}
                   </q-item-label>
                 </q-item-section>
 
@@ -291,12 +291,12 @@
                   <div class="row items-center q-gutter-xs">
                     <q-avatar size="24px">
                       <img
-                        v-if="clanZaStavku(stavka).profil_slika"
-                        :src="clanZaStavku(stavka).profil_slika"
+                        v-if="clanZaStavku(stavka).profile_picture"
+                        :src="clanZaStavku(stavka).profile_picture"
                       />
                       <q-icon v-else name="person" />
                     </q-avatar>
-                    <div class="text-caption text-grey-7">{{ clanZaStavku(stavka).ime }}</div>
+                    <div class="text-caption text-grey-7">{{ clanZaStavku(stavka).username }}</div>
                   </div>
                 </q-item-section>
 
@@ -348,27 +348,25 @@ const opcijeTipa = computed(() => [
   { label: t('pregled.dogadaj'), value: 'dogadaj' },
 ])
 
-const opcijeClanova = computed(() =>
-  clanovi.value.map((c) => ({ label: c.ime, value: c.id, slika: c.profil_slika })),
+const opcijeClanova = computed(
+  () => clanovi.value.map((c) => ({ label: c.username, value: c.id, slika: c.profile_picture })), // Map members to dropdown options.
 )
 
 onMounted(async () => {
   try {
     const { data } = await api.get('/households/moje')
-    clanovi.value = data.clanovi
+    clanovi.value = data.clanovi // Populate members from the household.
   } catch {
-    clanovi.value = []
+    clanovi.value = [] // Keep the member list empty if loading fails.
   }
 })
 
 function clanZaStavku(stavka) {
-  return clanovi.value.find((c) => c.id === stavka.dodijeljeno_id) || null
+  return clanovi.value.find((c) => c.id === stavka.assigned_id) || null
 }
 
-// Prijedlozi za brzo dodavanje: prvo osobna povijest (ono što je OVAJ
-// korisnik ranije dodavao, poredano po učestalosti), a zatim generic
-// baza prijedloga koja postoji od početka (za nove korisnike/kućanstva
-// bez povijesti, ili dok ne popune sve slotove).
+// Quick-add suggestions use this user's history first, sorted by frequency,
+// followed by the built-in suggestions for new users or households.
 const prijedlozi = computed(() => {
   const mojId = authStore.korisnik?.id
   const upisano = noviNaziv.value.trim().toLowerCase()
@@ -376,8 +374,8 @@ const prijedlozi = computed(() => {
   const brojac = new Map()
   if (mojId) {
     for (const s of tasksStore.stavke) {
-      if (s.dodao_id !== mojId) continue
-      const naziv = s.naziv?.trim()
+      if (s.added_id !== mojId) continue
+      const naziv = s.item?.trim()
       if (!naziv) continue
       brojac.set(naziv, (brojac.get(naziv) || 0) + 1)
     }
@@ -428,7 +426,7 @@ function formatirajKratkiDatum(datumString) {
 }
 
 function jeZaostalo(stavka) {
-  return stavka.datum?.slice(0, 10) < danasnjiDatumString()
+  return stavka.item_date?.slice(0, 10) < danasnjiDatumString()
 }
 
 async function posaljiNovuStavku() {
@@ -442,11 +440,11 @@ async function posaljiNovuStavku() {
   spremaSe.value = true
   try {
     await tasksStore.dodajStavku({
-      naziv: noviNaziv.value,
-      datum: noviDatum.value,
-      tip: noviTip.value,
-      boja: noviBoja.value,
-      dodijeljeno_id: noviDodijeljenoId.value,
+      item: noviNaziv.value,
+      item_date: noviDatum.value,
+      item_type: noviTip.value,
+      colour: noviBoja.value,
+      assigned_id: noviDodijeljenoId.value,
     })
     noviNaziv.value = ''
     noviDatum.value = danasnjiDatumString()
@@ -469,11 +467,11 @@ async function odaberiPrijedlog(prijedlog) {
 const stavkeDanas = computed(() => {
   const danas = danasnjiDatumString()
   return tasksStore.stavke.filter((s) => {
-    if (filterClanId.value && s.dodijeljeno_id !== filterClanId.value) return false
-    const datumStavke = s.datum?.slice(0, 10)
+    if (filterClanId.value && s.assigned_id !== filterClanId.value) return false
+    const datumStavke = s.item_date?.slice(0, 10)
     if (!datumStavke) return false
     if (datumStavke === danas) return true
-    if (s.tip === 'zadatak' && !s.gotovo && datumStavke < danas) return true
+    if (s.item_type === 'zadatak' && !s.completed && datumStavke < danas) return true
     return false
   })
 })
@@ -492,8 +490,8 @@ const tjedanKartice = computed(() => {
       prikazDatuma: datum.toLocaleDateString(locale.value, { day: 'numeric', month: 'long' }),
       stavke: tasksStore.stavke.filter(
         (s) =>
-          s.datum?.slice(0, 10) === datumString &&
-          (!filterClanId.value || s.dodijeljeno_id === filterClanId.value),
+          s.item_date?.slice(0, 10) === datumString &&
+          (!filterClanId.value || s.assigned_id === filterClanId.value),
       ),
     })
   }

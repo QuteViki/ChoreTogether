@@ -13,7 +13,7 @@ export const useShoppingStore = defineStore('shopping', {
     },
 
     ukloniZaZadatak(taskId) {
-      this.liste = this.liste.filter((l) => l.stavka_id !== taskId)
+      this.liste = this.liste.filter((l) => l.article_id !== taskId)
     },
 
     async azurirajListu(listaId, izmjene) {
@@ -21,13 +21,12 @@ export const useShoppingStore = defineStore('shopping', {
       const indeks = this.liste.findIndex((l) => l.id === listaId)
       if (indeks !== -1) this.liste[indeks] = { ...this.liste[indeks], ...data }
 
-      // ako je popis vezan uz zadatak i mijenjala se boja, odmah uskladi
-      // i boju zadatka u prikazu (bez čekanja na ponovno učitavanje)
-      if (data.stavka_id && izmjene.boja) {
+      // Keep the linked item's colour in sync immediately without reloading.
+      if (data.article_id && izmjene.list_colour) {
         const { useTasksStore } = await import('./tasks-store')
         const tasksStore = useTasksStore()
-        const zadatak = tasksStore.stavke.find((s) => s.id === data.stavka_id)
-        if (zadatak) zadatak.boja = izmjene.boja
+        const zadatak = tasksStore.stavke.find((s) => s.id === data.article_id)
+        if (zadatak) zadatak.colour = izmjene.list_colour
       }
     },
 
@@ -36,8 +35,8 @@ export const useShoppingStore = defineStore('shopping', {
       this.liste = this.liste.filter((l) => l.id !== listaId)
     },
 
-    async dodajStavku(listaId, naziv, kolicina = 1) {
-      const { data } = await api.post(`/popisi-kupovine/${listaId}/stavke`, { naziv, kolicina })
+    async dodajStavku(listaId, article, quantity = 1) {
+      const { data } = await api.post(`/popisi-kupovine/${listaId}/stavke`, { article, quantity })
       const lista = this.liste.find((l) => l.id === listaId)
       if (lista) lista.stavke.push(data)
     },
@@ -47,9 +46,9 @@ export const useShoppingStore = defineStore('shopping', {
       const stavka = lista?.stavke.find((s) => s.id === stavkaId)
       if (!stavka) return
       const { data } = await api.patch(`/popisi-kupovine/stavke/${stavkaId}`, {
-        kupljeno: !stavka.kupljeno,
+        buy: !stavka.buy,
       })
-      stavka.kupljeno = data.kupljeno
+      stavka.buy = data.buy
     },
 
     async ukloniStavku(listaId, stavkaId) {

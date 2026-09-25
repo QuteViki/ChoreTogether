@@ -16,7 +16,7 @@
       <q-tab-panel name="kreiraj">
         <q-form @submit="posaljiKreiranje" class="q-gutter-md">
           <q-input
-            v-model="naziv"
+            v-model="householdName"
             :label="t('kucanstvo.nazivLabel')"
             outlined
             :rules="[(val) => !!val || t('common.obavezno')]"
@@ -60,7 +60,7 @@ import { useHouseholdStore } from '@/stores/household-store'
 
 const { t } = useI18n()
 const tab = ref('kreiraj')
-const naziv = ref('')
+const householdName = ref('')
 const kodPozivnice = ref('')
 const greska = ref('')
 const ucitavanje = ref(false)
@@ -72,7 +72,7 @@ async function posaljiKreiranje() {
   greska.value = ''
   ucitavanje.value = true
   try {
-    await householdStore.kreiraj(naziv.value)
+    await householdStore.kreiraj(householdName.value)
     router.push('/')
   } catch (err) {
     greska.value = err.response?.data?.greska || t('kucanstvo.stvaranjeNeuspjelo')

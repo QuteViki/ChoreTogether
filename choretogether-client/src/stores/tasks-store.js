@@ -16,21 +16,21 @@ export const useTasksStore = defineStore('tasks', {
     async dodajStavku(nova) {
       const { data } = await api.post('/stavke', nova)
       this.stavke.push(data)
-      if (data.tip === 'zadatak') {
+      if (data.item_type === 'zadatak') {
         await useShoppingStore().ucitajListe()
       }
     },
 
     async oznaciGotovo(stavka) {
-      const { data } = await api.patch(`/stavke/${stavka.id}`, { gotovo: !stavka.gotovo })
+      const { data } = await api.patch(`/stavke/${stavka.id}`, { completed: !stavka.completed })
       const indeks = this.stavke.findIndex((s) => s.id === stavka.id)
       if (indeks !== -1) this.stavke[indeks] = data
-      if (data.gotovo) {
+      if (data.completed) {
         useShoppingStore().ukloniZaZadatak(stavka.id)
       }
     },
-    async azurirajBoju(stavka, boja) {
-      const { data } = await api.patch(`/stavke/${stavka.id}`, { boja })
+    async azurirajBoju(stavka, colour) {
+      const { data } = await api.patch(`/stavke/${stavka.id}`, { colour })
       const indeks = this.stavke.findIndex((s) => s.id === stavka.id)
       if (indeks !== -1) this.stavke[indeks] = data
     },
@@ -38,8 +38,8 @@ export const useTasksStore = defineStore('tasks', {
     async obrisiStavku(id) {
       await api.delete(`/stavke/${id}`)
       this.stavke = this.stavke.filter((s) => s.id !== id)
-      // baza već briše povezani popis (ON DELETE CASCADE) — ovdje samo
-      // uskladimo prikaz da popis odmah nestane i iz frontend stanja
+      // The database removes the linked list through ON DELETE CASCADE;
+      // remove it from the frontend state immediately as well.
       useShoppingStore().ukloniZaZadatak(id)
     },
   },

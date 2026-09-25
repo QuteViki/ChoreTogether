@@ -71,7 +71,7 @@ async function posaljiReset() {
   try {
     await api.post('/auth/resetiraj-lozinku', {
       token: token.value,
-      novaLozinka: novaLozinka.value,
+      new_password: novaLozinka.value,
     })
     uspjeh.value = true
   } catch (err) {

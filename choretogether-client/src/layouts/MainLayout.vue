@@ -5,9 +5,12 @@
         <q-btn flat dense round icon="menu" @click="drawerOtvoren = !drawerOtvoren" />
         <q-toolbar-title>ChoreTogether</q-toolbar-title>
         <div v-if="authStore.korisnik" class="row items-center q-gutter-sm">
-          <div class="text-caption">{{ authStore.korisnik.ime }}</div>
+          <div class="text-caption">{{ authStore.korisnik.username }}</div>
           <q-avatar size="28px">
-            <img v-if="authStore.korisnik.profil_slika" :src="authStore.korisnik.profil_slika" />
+            <img
+              v-if="authStore.korisnik.profile_picture"
+              :src="authStore.korisnik.profile_picture"
+            />
             <q-icon v-else name="person" />
           </q-avatar>
         </div>
@@ -57,7 +60,7 @@ import { useAuthStore } from '@/stores/auth-store'
 import { useThemeStore } from '@/stores/theme-store'
 import { useLocaleStore } from '@/stores/locale-store'
 
-const INTERVAL_OSVJEZAVANJA = 8000 // 8 sekundi
+const INTERVAL_OSVJEZAVANJA = 8000 // 8 seconds
 
 const { t } = useI18n()
 const drawerOtvoren = ref(false)

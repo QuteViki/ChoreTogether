@@ -58,7 +58,7 @@ async function posaljiPrijavu() {
   greska.value = ''
   ucitavanje.value = true
   try {
-    await authStore.prijava({ email: email.value, lozinka: lozinka.value })
+    await authStore.prijava({ email: email.value, password: lozinka.value })
     if (authStore.imaKucanstvo) {
       router.push('/')
     } else {

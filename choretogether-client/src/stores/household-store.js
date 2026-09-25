@@ -9,8 +9,8 @@ export const useHouseholdStore = defineStore('household', {
   }),
 
   actions: {
-    async kreiraj(naziv) {
-      const { data } = await api.post('/households/kreiraj', { naziv })
+    async kreiraj(householdName) {
+      const { data } = await api.post('/households/kreiraj', { household_name: householdName })
       this.kucanstvo = data
       useAuthStore().azurirajKorisnika({ household_id: data.id })
     },
@@ -27,8 +27,8 @@ export const useHouseholdStore = defineStore('household', {
       this.clanovi = clanovi
     },
 
-    async promijeniNaziv(naziv) {
-      const { data } = await api.patch('/households', { naziv })
+    async promijeniNaziv(householdName) {
+      const { data } = await api.patch('/households', { household_name: householdName })
       this.kucanstvo = { ...this.kucanstvo, ...data }
     },
   },

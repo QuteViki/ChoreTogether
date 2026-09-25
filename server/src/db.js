@@ -1,9 +1,9 @@
 import pg from "pg";
 import "dotenv/config";
 
-// DATE stupce vraćaj kao čisti string ("2026-08-23"), a ne kao JS Date objekt —
-// inače pg gradi Date na "ponoć po lokalnoj vremenskoj zoni", što se onda krivo
-// pretvori u UTC pri slanju JSON-a i pomakne datum za jedan dan unatrag.
+// Return DATE columns as plain strings ("2026-08-23") instead of JS Date objects.
+// Otherwise pg creates a Date at local midnight, which can shift the date backward
+// by one day when it is converted to UTC during JSON serialization.
 pg.types.setTypeParser(1082, (val) => val);
 
 export const pool = new pg.Pool({

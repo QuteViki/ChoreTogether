@@ -5,7 +5,10 @@
     <q-card flat bordered class="q-mb-lg">
       <q-card-section class="column items-center">
         <q-avatar size="96px" class="q-mb-sm">
-          <img v-if="authStore.korisnik?.profil_slika" :src="authStore.korisnik.profil_slika" />
+          <img
+            v-if="authStore.korisnik?.profile_picture"
+            :src="authStore.korisnik.profile_picture"
+          />
           <q-icon v-else name="person" size="64px" color="grey-5" />
         </q-avatar>
 
@@ -21,7 +24,7 @@
         <div v-if="greskaSlika" class="text-negative text-caption q-mt-xs">{{ greskaSlika }}</div>
 
         <q-input
-          v-model="ime"
+          v-model="username"
           :label="t('profil.ime')"
           dense
           outlined
@@ -59,12 +62,12 @@
             <q-item v-for="clan in householdStore.clanovi" :key="clan.id">
               <q-item-section avatar>
                 <q-avatar size="32px">
-                  <img v-if="clan.profil_slika" :src="clan.profil_slika" />
+                  <img v-if="clan.profile_picture" :src="clan.profile_picture" />
                   <q-icon v-else name="person" color="grey-5" />
                 </q-avatar>
               </q-item-section>
               <q-item-section>
-                <q-item-label>{{ clan.ime }}</q-item-label>
+                <q-item-label>{{ clan.username }}</q-item-label>
                 <q-item-label caption>{{ clan.email }}</q-item-label>
               </q-item-section>
             </q-item>
@@ -98,28 +101,31 @@ const router = useRouter()
 
 const odabranaDatoteka = ref(null)
 const greskaSlika = ref('')
-const ime = ref(authStore.korisnik?.ime || '')
+const username = ref(authStore.korisnik?.username || '')
 const nazivKucanstva = ref('')
 
 onMounted(async () => {
   await householdStore.ucitaj()
-  nazivKucanstva.value = householdStore.kucanstvo?.naziv || ''
+  nazivKucanstva.value = householdStore.kucanstvo?.household_name || ''
 })
 
 watch(
-  () => householdStore.kucanstvo?.naziv,
+  () => householdStore.kucanstvo?.household_name,
   (novi) => {
     if (novi !== undefined) nazivKucanstva.value = novi
   },
 )
 
 async function spremiIme() {
-  if (!ime.value.trim() || ime.value === authStore.korisnik?.ime) return
-  await authStore.azurirajIme(ime.value)
+  if (!username.value.trim() || username.value === authStore.korisnik?.username) return
+  await authStore.azurirajIme(username.value)
 }
 
 async function spremiNazivKucanstva() {
-  if (!nazivKucanstva.value.trim() || nazivKucanstva.value === householdStore.kucanstvo?.naziv)
+  if (
+    !nazivKucanstva.value.trim() ||
+    nazivKucanstva.value === householdStore.kucanstvo?.household_name
+  )
     return
   await householdStore.promijeniNaziv(nazivKucanstva.value)
 }

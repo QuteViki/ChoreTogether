@@ -17,7 +17,7 @@ export const useLocaleStore = defineStore('lokalizacija', {
     },
     primijeniOdKorisnika(korisnik) {
       if (!korisnik) return this.primijeniZaGosta()
-      this.postaviJezikLokalno(korisnik.jezik || 'hr')
+      this.postaviJezikLokalno(korisnik.app_language || 'hr')
     },
     postaviJezikLokalno(jezik) {
       this.jezik = jezik
@@ -25,7 +25,7 @@ export const useLocaleStore = defineStore('lokalizacija', {
     },
     async postaviJezik(jezik) {
       this.postaviJezikLokalno(jezik)
-      await useAuthStore().azurirajPostavkeTeme({ jezik })
+      await useAuthStore().azurirajPostavkeTeme({ app_language: jezik })
     },
   },
 })

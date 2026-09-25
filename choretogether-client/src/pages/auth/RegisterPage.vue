@@ -9,7 +9,7 @@
     <q-form @submit="posaljiRegistraciju">
       <q-card-section class="q-gutter-md">
         <q-input
-          v-model="ime"
+          v-model="username"
           :label="t('auth.ime')"
           outlined
           :rules="[(val) => !!val || t('common.obavezno')]"
@@ -50,7 +50,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth-store'
 
 const { t } = useI18n()
-const ime = ref('')
+const username = ref('')
 const email = ref('')
 const lozinka = ref('')
 const greska = ref('')
@@ -63,7 +63,11 @@ async function posaljiRegistraciju() {
   greska.value = ''
   ucitavanje.value = true
   try {
-    await authStore.registracija({ ime: ime.value, email: email.value, lozinka: lozinka.value })
+    await authStore.registracija({
+      username: username.value,
+      email: email.value,
+      password: lozinka.value,
+    })
     router.push('/kucanstvo')
   } catch (err) {
     greska.value = err.response?.data?.greska || t('auth.registracijaNeuspjela')

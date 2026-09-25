@@ -10,44 +10,45 @@ statistikaRoute.get("/", async (req, res) => {
   const brojDana = razdoblje === "mjesec" ? 30 : 7;
 
   const poKorisnikuRezultat = await pool.query(
-    `SELECT u.id, u.ime, u.profil_slika, COUNT(s.id)::int AS broj_zavrsenih
+    `SELECT u.id, u.username, u.profile_picture,
+        COUNT(s.id)::int
      FROM users u
-     LEFT JOIN stavke s
-       ON s.zavrsio_id = u.id
+     LEFT JOIN items s
+       ON s.completed_id = u.id
        AND s.household_id = $1
-       AND s.zavrseno_at >= NOW() - ($2 || ' days')::interval
+       AND s.completed_at >= NOW() - ($2 || ' days')::interval
      WHERE u.household_id = $1
-     GROUP BY u.id, u.ime, u.profil_slika
-     ORDER BY broj_zavrsenih DESC`,
+     GROUP BY u.id, u.username, u.profile_picture
+     ORDER BY count DESC`,
     [req.householdId, brojDana],
   );
 
   const poZadatkuRezultat = await pool.query(
-    `SELECT naziv, COUNT(*)::int AS broj
-     FROM stavke
+    `SELECT item, COUNT(*)::int
+     FROM items
      WHERE household_id = $1
-       AND tip = 'zadatak'
-       AND zavrseno_at >= NOW() - ($2 || ' days')::interval
-     GROUP BY naziv
-     ORDER BY broj DESC`,
+       AND item_type = 'zadatak'
+       AND completed_at >= NOW() - ($2 || ' days')::interval
+     GROUP BY item
+     ORDER BY count DESC`,
     [req.householdId, brojDana],
   );
 
   const prenesenoRezultat = await pool.query(
-    `SELECT naziv, COUNT(*)::int AS broj
-     FROM stavke
+    `SELECT item, COUNT(*)::int
+     FROM items
      WHERE household_id = $1
-       AND tip = 'zadatak'
-       AND gotovo = false
-       AND datum < CURRENT_DATE
-     GROUP BY naziv
-     ORDER BY broj DESC
+       AND item_type = 'zadatak'
+       AND completed = false
+       AND item_date < CURRENT_DATE
+     GROUP BY item
+     ORDER BY count DESC
      LIMIT 3`,
     [req.householdId],
   );
 
   const ukupnoZavrseno = poKorisnikuRezultat.rows.reduce(
-    (zbroj, r) => zbroj + r.broj_zavrsenih,
+    (zbroj, r) => zbroj + r.count,
     0,
   );
 
@@ -60,21 +61,20 @@ statistikaRoute.get("/", async (req, res) => {
   });
 });
 
-// Detaljan popis zadataka koje je konkretan član kućanstva odradio u
-// odabranom razdoblju — koristi se za prikaz nakon klika na člana na
-// stranici statistike. Household provjera je automatska jer se filtrira
-// po req.householdId, pa netko iz drugog kućanstva ne može dohvatiti tuđe podatke.
+// Return the items completed by a specific household member during the
+// selected period. Filtering by req.householdId prevents access to another
+// household's data.
 statistikaRoute.get("/korisnik/:id", async (req, res) => {
   const razdoblje = req.query.razdoblje === "mjesec" ? "mjesec" : "tjedan";
   const brojDana = razdoblje === "mjesec" ? 30 : 7;
 
   const rezultat = await pool.query(
-    `SELECT id, naziv, datum, boja, zavrseno_at
-     FROM stavke
+    `SELECT id, item, item_date, colour, completed_at
+     FROM items
      WHERE household_id = $1
-       AND zavrsio_id = $2
-       AND zavrseno_at >= NOW() - ($3 || ' days')::interval
-     ORDER BY zavrseno_at DESC`,
+       AND completed_id = $2
+       AND completed_at >= NOW() - ($3 || ' days')::interval
+     ORDER BY completed_at DESC`,
     [req.householdId, req.params.id, brojDana],
   );
 

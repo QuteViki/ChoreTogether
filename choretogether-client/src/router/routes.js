@@ -12,16 +12,17 @@ const routes = [
         path: 'zaboravljena-lozinka',
         component: () => import('@/pages/auth/ForgotPasswordPage.vue'),
       },
-      { path: 'reset-lozinke', component: () => import('@/pages/auth/ResetLozinkePage.vue') },
+      { path: 'reset-lozinke', component: () => import('@/pages/auth/ResetPasswordPage.vue') },
     ],
   },
   {
     path: '/kucanstvo',
-    component: () => import('@/pages/auth/HouseholdSetupPage.vue'),
+    component: () => import('@/layouts/AuthLayout.vue'),
     beforeEnter: () => {
       const authStore = useAuthStore()
       if (!authStore.jePrijavljen) return '/auth/prijava'
     },
+    children: [{ path: '', component: () => import('@/pages/auth/HouseholdSetupPage.vue') }],
   },
   {
     path: '/',

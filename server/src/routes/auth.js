@@ -4,17 +4,17 @@ import jwt from "jsonwebtoken";
 import crypto from "crypto";
 import { pool } from "../db.js";
 import { trebaPrijavu } from "./middleware.js";
-import { posaljiEmailZaResetLozinke } from "../servisi/mail.js";
+import { posaljiEmailZaResetLozinke } from "../services/mail.js";
 
 export const authRoute = Router();
 const TAJNI_KLJUC = process.env.JWT_SECRET || "tajna_razvojna_vrijednost";
 
 authRoute.post("/registracija", async (req, res) => {
-  const { ime, email, lozinka } = req.body;
-  if (!ime || !email || !lozinka) {
+  const { username, email, password } = req.body;
+  if (!username || !email || !password) {
     return res
       .status(400)
-      .json({ greska: "Ime, email i lozinka su obavezni." });
+      .json({ greska: "Korisničko ime, email i lozinka su obavezni." });
   }
   try {
     const postoji = await pool.query("SELECT id FROM users WHERE email = $1", [
@@ -25,12 +25,13 @@ authRoute.post("/registracija", async (req, res) => {
         .status(409)
         .json({ greska: "Korisnik s tim emailom već postoji." });
     }
-    const hash = await bcrypt.hash(lozinka, 10);
+    const hash = await bcrypt.hash(password, 10);
     const rezultat = await pool.query(
-      `INSERT INTO users (ime, email, lozinka_hash)
+      `INSERT INTO users (username, email, password_hash)
        VALUES ($1, $2, $3)
-       RETURNING id, ime, email, profil_slika, tema_nacin, tema_boja, jezik`,
-      [ime, email, hash],
+      RETURNING id, username, email, household_id, created_at,
+           profile_picture, theme, theme_colour, app_language`,
+      [username, email, hash],
     );
     const korisnik = rezultat.rows[0];
     const token = jwt.sign({ userId: korisnik.id }, TAJNI_KLJUC, {
@@ -44,13 +45,14 @@ authRoute.post("/registracija", async (req, res) => {
 });
 
 authRoute.post("/prijava", async (req, res) => {
-  const { email, lozinka } = req.body;
-  if (!email || !lozinka) {
+  const { email, password } = req.body;
+  if (!email || !password) {
     return res.status(400).json({ greska: "Email i lozinka su obavezni." });
   }
   try {
     const rezultat = await pool.query(
-      `SELECT id, ime, email, lozinka_hash, household_id, profil_slika, tema_nacin, tema_boja, jezik
+      `SELECT id, username, email, password_hash, household_id, created_at,
+              profile_picture, theme, theme_colour, app_language
        FROM users WHERE email = $1`,
       [email],
     );
@@ -58,11 +60,11 @@ authRoute.post("/prijava", async (req, res) => {
     if (!korisnik) {
       return res.status(401).json({ greska: "Pogrešan email ili lozinka." });
     }
-    const ispravno = await bcrypt.compare(lozinka, korisnik.lozinka_hash);
+    const ispravno = await bcrypt.compare(password, korisnik.password_hash);
     if (!ispravno) {
       return res.status(401).json({ greska: "Pogrešan email ili lozinka." });
     }
-    delete korisnik.lozinka_hash;
+    delete korisnik.password_hash;
     const token = jwt.sign({ userId: korisnik.id }, TAJNI_KLJUC, {
       expiresIn: "30d",
     });
@@ -80,7 +82,7 @@ authRoute.post("/zaboravljena-lozinka", async (req, res) => {
   }
   try {
     const rezultat = await pool.query(
-      "SELECT id, ime FROM users WHERE email = $1",
+      "SELECT id, username FROM users WHERE email = $1",
       [email],
     );
     const korisnik = rezultat.rows[0];
@@ -91,7 +93,7 @@ authRoute.post("/zaboravljena-lozinka", async (req, res) => {
       const istice = new Date(Date.now() + 60 * 60 * 1000);
 
       await pool.query(
-        "UPDATE users SET reset_token = $1, reset_token_istice = $2 WHERE id = $3",
+        "UPDATE users SET reset_token = $1, reset_token_expire = $2 WHERE id = $3",
         [hash, istice, korisnik.id],
       );
 
@@ -99,7 +101,7 @@ authRoute.post("/zaboravljena-lozinka", async (req, res) => {
         process.env.FRONTEND_URL || "https://choretogether.space";
       const link = `${frontendUrl}/auth/reset-lozinke?token=${sirovi}`;
 
-      await posaljiEmailZaResetLozinke(email, korisnik.ime, link);
+      await posaljiEmailZaResetLozinke(email, korisnik.username, link);
     }
 
     res.json({
@@ -113,8 +115,8 @@ authRoute.post("/zaboravljena-lozinka", async (req, res) => {
 });
 
 authRoute.post("/resetiraj-lozinku", async (req, res) => {
-  const { token, novaLozinka } = req.body;
-  if (!token || !novaLozinka) {
+  const { token, new_password } = req.body;
+  if (!token || !new_password) {
     return res
       .status(400)
       .json({ greska: "Token i nova lozinka su obavezni." });
@@ -122,7 +124,7 @@ authRoute.post("/resetiraj-lozinku", async (req, res) => {
   try {
     const hash = crypto.createHash("sha256").update(token).digest("hex");
     const rezultat = await pool.query(
-      "SELECT id FROM users WHERE reset_token = $1 AND reset_token_istice > NOW()",
+      "SELECT id FROM users WHERE reset_token = $1 AND reset_token_expire > NOW()",
       [hash],
     );
     const korisnik = rezultat.rows[0];
@@ -131,9 +133,9 @@ authRoute.post("/resetiraj-lozinku", async (req, res) => {
         .status(400)
         .json({ greska: "Poveznica nije valjana ili je istekla." });
     }
-    const noviHash = await bcrypt.hash(novaLozinka, 10);
+    const noviHash = await bcrypt.hash(new_password, 10);
     await pool.query(
-      "UPDATE users SET lozinka_hash = $1, reset_token = NULL, reset_token_istice = NULL WHERE id = $2",
+      "UPDATE users SET password_hash = $1, reset_token = NULL, reset_token_expire = NULL WHERE id = $2",
       [noviHash, korisnik.id],
     );
     res.json({ poruka: "Lozinka je uspješno promijenjena." });
@@ -144,14 +146,16 @@ authRoute.post("/resetiraj-lozinku", async (req, res) => {
 });
 
 authRoute.patch("/ime", trebaPrijavu, async (req, res) => {
-  const { ime } = req.body;
-  if (!ime || !ime.trim()) {
+  const { username } = req.body;
+  if (!username || !username.trim()) {
     return res.status(400).json({ greska: "Ime ne smije biti prazno." });
   }
   try {
     const rezultat = await pool.query(
-      "UPDATE users SET ime = $1 WHERE id = $2 RETURNING id, ime, email, profil_slika, tema_nacin, tema_boja, jezik",
-      [ime.trim(), req.userId],
+      `UPDATE users SET username = $1 WHERE id = $2
+       RETURNING id, username, email, household_id, created_at,
+             profile_picture, theme, theme_colour, app_language`,
+      [username.trim(), req.userId],
     );
     res.json(rezultat.rows[0]);
   } catch (err) {
@@ -161,16 +165,17 @@ authRoute.patch("/ime", trebaPrijavu, async (req, res) => {
 });
 
 authRoute.patch("/postavke", trebaPrijavu, async (req, res) => {
-  const { tema_nacin, tema_boja, jezik } = req.body;
+  const { theme, theme_colour, app_language } = req.body;
   try {
     const rezultat = await pool.query(
       `UPDATE users SET
-         tema_nacin = COALESCE($1, tema_nacin),
-         tema_boja = COALESCE($2, tema_boja),
-         jezik = COALESCE($3, jezik)
+         theme = COALESCE($1, theme),
+         theme_colour = COALESCE($2, theme_colour),
+         app_language = COALESCE($3, app_language)
        WHERE id = $4
-       RETURNING id, ime, email, profil_slika, tema_nacin, tema_boja, jezik`,
-      [tema_nacin, tema_boja, jezik, req.userId],
+       RETURNING id, username, email, household_id, created_at,
+                 profile_picture, theme, theme_colour, app_language`,
+      [theme, theme_colour, app_language, req.userId],
     );
     res.json(rezultat.rows[0]);
   } catch (err) {
@@ -180,24 +185,24 @@ authRoute.patch("/postavke", trebaPrijavu, async (req, res) => {
 });
 
 authRoute.patch("/lozinka", trebaPrijavu, async (req, res) => {
-  const { staraLozinka, novaLozinka } = req.body;
-  if (!staraLozinka || !novaLozinka) {
+  const { current_password, new_password } = req.body;
+  if (!current_password || !new_password) {
     return res.status(400).json({ greska: "Obje lozinke su obavezne." });
   }
   try {
     const rezultat = await pool.query(
-      "SELECT lozinka_hash FROM users WHERE id = $1",
+      "SELECT password_hash FROM users WHERE id = $1",
       [req.userId],
     );
     const ispravno = await bcrypt.compare(
-      staraLozinka,
-      rezultat.rows[0].lozinka_hash,
+      current_password,
+      rezultat.rows[0].password_hash,
     );
     if (!ispravno) {
       return res.status(401).json({ greska: "Stara lozinka nije ispravna." });
     }
-    const noviHash = await bcrypt.hash(novaLozinka, 10);
-    await pool.query("UPDATE users SET lozinka_hash = $1 WHERE id = $2", [
+    const noviHash = await bcrypt.hash(new_password, 10);
+    await pool.query("UPDATE users SET password_hash = $1 WHERE id = $2", [
       noviHash,
       req.userId,
     ]);
@@ -209,11 +214,13 @@ authRoute.patch("/lozinka", trebaPrijavu, async (req, res) => {
 });
 
 authRoute.patch("/profilna", trebaPrijavu, async (req, res) => {
-  const { slika } = req.body;
+  const { profile_picture } = req.body;
   try {
     const rezultat = await pool.query(
-      "UPDATE users SET profil_slika = $1 WHERE id = $2 RETURNING id, ime, email, profil_slika, tema_nacin, tema_boja, jezik",
-      [slika, req.userId],
+      `UPDATE users SET profile_picture = $1 WHERE id = $2
+       RETURNING id, username, email, household_id, created_at,
+             profile_picture, theme, theme_colour, app_language`,
+      [profile_picture, req.userId],
     );
     res.json(rezultat.rows[0]);
   } catch (err) {

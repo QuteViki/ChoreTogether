@@ -6,15 +6,15 @@
 
     <div class="column q-gutter-md">
       <q-card v-for="lista in shoppingStore.liste" :key="lista.id" flat bordered>
-        <div :class="klasaPozadine(lista.boja)">
+        <div :class="klasaPozadine(lista.list_colour)">
           <q-card-section class="row items-center q-pb-none">
             <q-input
-              v-model="lista.naziv"
+              v-model="lista.list_name"
               dense
               borderless
               input-class="text-h6 text-weight-medium"
               class="col"
-              @blur="shoppingStore.azurirajListu(lista.id, { naziv: lista.naziv })"
+              @blur="shoppingStore.azurirajListu(lista.id, { list_name: lista.list_name })"
             />
             <q-btn
               flat
@@ -27,7 +27,9 @@
           </q-card-section>
 
           <q-card-section class="q-pt-none">
-            <div class="text-caption text-grey-7 q-mb-sm">{{ formatirajDatum(lista.datum) }}</div>
+            <div class="text-caption text-grey-7 q-mb-sm">
+              {{ formatirajDatum(lista.list_date) }}
+            </div>
 
             <div class="row q-gutter-xs q-mb-sm">
               <q-btn
@@ -37,7 +39,7 @@
                 dense
                 size="sm"
                 :color="boja"
-                :icon="lista.boja === boja ? 'check' : ''"
+                :icon="lista.list_colour === boja ? 'check' : ''"
                 @click="odaberiBoju(lista, boja)"
               />
             </div>
@@ -66,14 +68,14 @@
           <q-item v-for="stavka in lista.stavke" :key="stavka.id">
             <q-item-section avatar>
               <q-checkbox
-                :model-value="stavka.kupljeno"
+                :model-value="stavka.buy"
                 @update:model-value="shoppingStore.oznaciKupljeno(stavka.id, lista.id)"
               />
             </q-item-section>
             <q-item-section>
-              <q-item-label :class="{ 'text-strike text-grey-6': stavka.kupljeno }">
-                {{ stavka.naziv }}
-                <span v-if="stavka.kolicina > 1" class="text-grey-6"> × {{ stavka.kolicina }}</span>
+              <q-item-label :class="{ 'text-strike text-grey-6': stavka.buy }">
+                {{ stavka.article }}
+                <span v-if="stavka.quantity > 1" class="text-grey-6"> × {{ stavka.quantity }}</span>
               </q-item-label>
             </q-item-section>
             <q-item-section side>
@@ -112,8 +114,8 @@ function klasaPozadine(boja) {
 }
 
 function odaberiBoju(lista, boja) {
-  lista.boja = boja
-  shoppingStore.azurirajListu(lista.id, { boja })
+  lista.list_colour = boja
+  shoppingStore.azurirajListu(lista.id, { list_colour: boja })
 }
 
 async function posaljiNovuStavku(listaId) {
