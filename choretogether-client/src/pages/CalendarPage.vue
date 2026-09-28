@@ -12,6 +12,8 @@
       v-model="odabraniDatum"
       animated
       bordered
+      :locale="locale"
+      :weekdays="[1, 2, 3, 4, 5, 6, 0]"
       :day-min-height="70"
       @moved="osvjeziNazivMjeseca"
     >

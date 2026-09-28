@@ -12,14 +12,21 @@
           <q-icon v-else name="person" size="64px" color="grey-5" />
         </q-avatar>
 
-        <q-file
-          v-model="odabranaDatoteka"
-          :label="t('profil.promijeniSliku')"
+        <input
+          ref="unosDatoteke"
+          type="file"
           accept="image/*"
+          class="hidden"
+          @change="ucitajSliku"
+        />
+        <q-btn
+          flat
           dense
-          outlined
-          style="max-width: 260px"
-          @update:model-value="ucitajSliku"
+          outline
+          :label="t('profil.promijeniSliku')"
+          icon="photo_camera"
+          class="text-center"
+          @click="unosDatoteke.click()"
         />
         <div v-if="greskaSlika" class="text-negative text-caption q-mt-xs">{{ greskaSlika }}</div>
 
@@ -29,8 +36,11 @@
           dense
           outlined
           class="full-width q-mt-md"
-          @blur="spremiIme"
-        />
+        >
+          <template #append>
+            <q-btn flat dense round icon="save" size="sm" @click="spremiIme" />
+          </template>
+        </q-input>
         <div class="text-caption text-grey-7 q-mt-xs full-width">
           {{ authStore.korisnik?.email }}
         </div>
@@ -41,13 +51,11 @@
       <q-card-section>
         <div class="text-subtitle1 q-mb-sm">{{ t('profil.kucanstvo') }}</div>
         <div v-if="householdStore.kucanstvo">
-          <q-input
-            v-model="nazivKucanstva"
-            dense
-            outlined
-            :label="t('profil.nazivKucanstva')"
-            @blur="spremiNazivKucanstva"
-          />
+          <q-input v-model="nazivKucanstva" dense outlined :label="t('profil.nazivKucanstva')">
+            <template #append>
+              <q-btn flat dense round icon="save" size="sm" @click="spremiNazivKucanstva" />
+            </template>
+          </q-input>
 
           <div class="row items-center q-mt-sm q-gutter-sm">
             <div class="text-caption text-grey-7">{{ t('profil.pozivniKod') }}</div>
@@ -99,7 +107,7 @@ const authStore = useAuthStore()
 const householdStore = useHouseholdStore()
 const router = useRouter()
 
-const odabranaDatoteka = ref(null)
+const unosDatoteke = ref(null)
 const greskaSlika = ref('')
 const username = ref(authStore.korisnik?.username || '')
 const nazivKucanstva = ref('')
@@ -130,13 +138,14 @@ async function spremiNazivKucanstva() {
   await householdStore.promijeniNaziv(nazivKucanstva.value)
 }
 
-function ucitajSliku(datoteka) {
+function ucitajSliku(event) {
+  const datoteka = event.target.files[0]
   greskaSlika.value = ''
   if (!datoteka) return
 
   if (datoteka.size > 1.5 * 1024 * 1024) {
     greskaSlika.value = t('profil.slikaPrevelika')
-    odabranaDatoteka.value = null
+    event.target.value = ''
     return
   }
 
@@ -147,7 +156,7 @@ function ucitajSliku(datoteka) {
     } catch {
       greskaSlika.value = t('profil.slanjeSlikeNeuspjelo')
     } finally {
-      odabranaDatoteka.value = null
+      event.target.value = ''
     }
   }
   citac.readAsDataURL(datoteka)

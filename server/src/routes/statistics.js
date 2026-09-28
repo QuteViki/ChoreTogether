@@ -7,7 +7,7 @@ statistikaRoute.use(trebaPrijavu, trebaKucanstvo);
 
 statistikaRoute.get("/", async (req, res) => {
   const razdoblje = req.query.razdoblje === "mjesec" ? "mjesec" : "tjedan";
-  const brojDana = razdoblje === "mjesec" ? 30 : 7;
+  const jedinica = razdoblje === "mjesec" ? "month" : "week";
 
   const poKorisnikuRezultat = await pool.query(
     `SELECT u.id, u.username, u.profile_picture,
@@ -16,11 +16,11 @@ statistikaRoute.get("/", async (req, res) => {
      LEFT JOIN items s
        ON s.completed_id = u.id
        AND s.household_id = $1
-       AND s.completed_at >= NOW() - ($2 || ' days')::interval
+       AND s.completed_at >= date_trunc($2, NOW())
      WHERE u.household_id = $1
      GROUP BY u.id, u.username, u.profile_picture
      ORDER BY count DESC`,
-    [req.householdId, brojDana],
+    [req.householdId, jedinica],
   );
 
   const poZadatkuRezultat = await pool.query(
@@ -28,10 +28,10 @@ statistikaRoute.get("/", async (req, res) => {
      FROM items
      WHERE household_id = $1
        AND item_type = 'zadatak'
-       AND completed_at >= NOW() - ($2 || ' days')::interval
+       AND completed_at >= date_trunc($2, NOW())
      GROUP BY item
      ORDER BY count DESC`,
-    [req.householdId, brojDana],
+    [req.householdId, jedinica],
   );
 
   const prenesenoRezultat = await pool.query(
@@ -66,16 +66,16 @@ statistikaRoute.get("/", async (req, res) => {
 // household's data.
 statistikaRoute.get("/korisnik/:id", async (req, res) => {
   const razdoblje = req.query.razdoblje === "mjesec" ? "mjesec" : "tjedan";
-  const brojDana = razdoblje === "mjesec" ? 30 : 7;
+  const jedinica = razdoblje === "mjesec" ? "month" : "week";
 
   const rezultat = await pool.query(
     `SELECT id, item, item_date, colour, completed_at
      FROM items
      WHERE household_id = $1
        AND completed_id = $2
-       AND completed_at >= NOW() - ($3 || ' days')::interval
+       AND completed_at >= date_trunc($3, NOW())
      ORDER BY completed_at DESC`,
-    [req.householdId, req.params.id, brojDana],
+    [req.householdId, req.params.id, jedinica],
   );
 
   res.json(rezultat.rows);
